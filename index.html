@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projects</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #e8e8e8;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding: 40px 24px;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #666;
+      margin-bottom: 32px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .new-project {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 48px;
+      max-width: 480px;
+    }
+
+    .new-project input {
+      flex: 1;
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 8px;
+      color: #e8e8e8;
+      font-size: 0.95rem;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .new-project input:focus { border-color: #444; }
+    .new-project input::placeholder { color: #444; }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 10px 16px;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn:hover { opacity: 0.8; }
+    .btn:disabled { opacity: 0.4; cursor: default; }
+
+    .btn-create { background: #1a1a1a; color: #e8e8e8; border: 1px solid #333; }
+    .btn-start  { background: #1a3a1a; color: #4caf50; border: 1px solid #2d5a2d; }
+    .btn-stop   { background: #3a1a1a; color: #f44336; border: 1px solid #5a2d2d; }
+    .btn-danger { background: #3a2a1a; color: #ff9800; border: 1px solid #5a3d1a; }
+
+    .projects { display: grid; gap: 12px; max-width: 720px; }
+
+    .card {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .card-info { flex: 1; }
+
+    .card-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .card-meta {
+      font-size: 0.78rem;
+      color: #555;
+    }
+
+    .card-meta a {
+      color: #555;
+      text-decoration: none;
+    }
+
+    .card-meta a:hover { color: #888; }
+
+    .card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .status {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #e8e8e8;
+      font-size: 0.85rem;
+      padding: 12px 18px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <h1>Projects</h1>
+
+  <div class="new-project">
+    <input id="new-name" type="text" placeholder="project-naam" />
+    <button class="btn btn-create" onclick="newProject()">🔨 Nieuw project</button>
+  </div>
+
+  <div class="projects" id="projects"></div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const N8N = 'https://n8n.jellespek.nl/webhook';
+
+    const projects = [
+      {
+        name: 'execution-engine',
+        label: 'Execution Engine',
+        folder: '/root/projects/personal/execution-engine',
+        github: 'https://github.com/lutjebroeker/execution-engine',
+        vercel: 'https://execution-engine.vercel.app',
+      },
+      {
+        name: 'fit-journey',
+        label: 'Fit Journey',
+        folder: '/root/projects/clients/fit-journey',
+        github: 'https://github.com/lutjebroeker/fit-journey',
+      },
+    ];
+
+    function render() {
+      const container = document.getElementById('projects');
+      container.innerHTML = projects.map(p => `
+        <div class="card">
+          <div class="card-info">
+            <div class="card-name">${p.label}</div>
+            <div class="card-meta">
+              ${p.github ? `<a href="${p.github}" target="_blank">GitHub</a>` : ''}
+              ${p.vercel ? ` · <a href="${p.vercel}" target="_blank">Vercel</a>` : ''}
+              <span style="color:#333"> · </span>${p.folder}
+            </div>
+          </div>
+          <div class="card-actions">
+            <button class="btn btn-start" onclick="start('${p.name}', '${p.folder}')">🚀 Start</button>
+            <button class="btn btn-stop" onclick="stop('${p.name}')">🛑 Stop</button>
+            <button class="btn btn-danger" onclick="startDanger('${p.name}', '${p.folder}')" title="Start met --dangerously-skip-permissions">⚠️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function start(name, folder) {
+      window.location.href = `${N8N}/start-project?session=${name}&folder=${encodeURIComponent(folder)}`;
+    }
+
+    function startDanger(name, folder) {
+      window.location.href = `${N8N}/start-project?session=${name}&folder=${encodeURIComponent(folder)}&mode=dangerous`;
+    }
+
+    async function stop(name) {
+      toast(`Sessie '${name}' stoppen...`);
+      try {
+        await fetch(`${N8N}/stop-project?session=${name}`);
+        toast(`✓ Sessie '${name}' gestopt`);
+      } catch (e) {
+        toast(`Stop '${name}' gestuurd`);
+      }
+    }
+
+    function newProject() {
+      const name = document.getElementById('new-name').value.trim().toLowerCase().replace(/\s+/g, '-');
+      if (!name) return;
+      window.location.href = `${N8N}/new-project?name=${encodeURIComponent(name)}`;
+    }
+
+    document.getElementById('new-name').addEventListener('keydown', e => {
+      if (e.key === 'Enter') newProject();
+    });
+
+    let toastTimer;
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    render();
+  </script>
+</body>
+</html>
