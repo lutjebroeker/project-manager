@@ -86,6 +86,63 @@
     .btn-stop   { background: #3a1a1a; color: #f44336; border: 1px solid #5a2d2d; }
     .btn-reset  { background: #1a1a3a; color: #7c9fef; border: 1px solid #2d3d6a; }
     .btn-danger { background: #3a2a1a; color: #ff9800; border: 1px solid #5a3d1a; }
+    .btn-task   { background: #1a1a1a; color: #888; border: 1px solid #2a2a2a; font-size: 0.8rem; padding: 8px 12px; }
+    .btn-task:hover { color: #aaa; }
+
+    /* Task input row */
+    .task-row {
+      display: none;
+      padding: 12px 24px 16px;
+      border-top: 1px solid #1a1a1a;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .task-row.open { display: flex; }
+
+    .task-row input {
+      flex: 1;
+      background: #0d0d0d;
+      border: 1px solid #222;
+      border-radius: 6px;
+      color: #e8e8e8;
+      font-size: 0.88rem;
+      padding: 8px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .task-row input:focus { border-color: #3a3a3a; }
+    .task-row input::placeholder { color: #333; }
+
+    .btn-add-task {
+      background: #1a2a1a;
+      border: 1px solid #2d4a2d;
+      border-radius: 6px;
+      color: #4caf50;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      padding: 8px 14px;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    .btn-add-task:hover { opacity: 0.8; }
+
+    /* Adjust card for task row */
+    .card {
+      flex-direction: column;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .card-main {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 24px;
+    }
 
     .projects { display: grid; gap: 12px; max-width: 720px; }
 
@@ -476,6 +533,14 @@
           </div>
           <div class="wf-card">
             <div class="wf-header">
+              <span class="wf-name">Voeg Taak Toe</span>
+              <span class="wf-badge" style="background:#1a2a3a;color:#7c9fef">obsidian</span>
+            </div>
+            <div class="wf-webhook">/webhook/add-task?project=X&task=Y</div>
+            <div class="wf-desc">Voegt een <code>- [ ]</code> taak toe aan <code>## Backlog</code> in de Obsidian project note. Gebruikt vanuit de site via de "+ Taak" knop per project.</div>
+          </div>
+          <div class="wf-card">
+            <div class="wf-header">
               <span class="wf-name">Analyseer Taken</span>
               <span class="wf-badge" style="background:#1a2a3a;color:#7c9fef">obsidian</span>
             </div>
@@ -539,6 +604,10 @@ tmux windows:  claude  /  shell  /  git</div>
           <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/YnOWKjbAUdJM7R9O__new-project-session.json" target="_blank">
             <div class="link-card-label">Workflow export</div>
             <div class="link-card-name">New Session</div>
+          </a>
+          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/qYqZxOMNgbKCbeXT__voeg-taak-toe.json" target="_blank">
+            <div class="link-card-label">Workflow export</div>
+            <div class="link-card-name">Voeg Taak Toe</div>
           </a>
           <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/xOXAVQQKh7EMWfOR__analyseer-taken.json" target="_blank">
             <div class="link-card-label">Workflow export</div>
@@ -628,6 +697,34 @@ tmux windows:  claude  /  shell  /  git</div>
   vercel: 'https://project.vercel.app',  // weglaten als niet van toepassing
 }</div>
         <p>Commit en push → Vercel deployt automatisch.</p>
+      </div>
+
+      <div class="docs-section">
+        <h2>Taken toevoegen via de site</h2>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Klik "+ Taak" bij een project</strong>
+              <span>Een invoerveld klapt open onder de project card</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Typ de taakbeschrijving</strong>
+              <span>Omschrijf wat er gebouwd moet worden — één taak per keer</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div></div>
+            <div class="flow-content">
+              <strong>Druk Enter of klik Toevoegen</strong>
+              <span>n8n schrijft <code>- [ ] taak</code> direct naar <code>## Backlog</code> in de Obsidian project note. Escape sluit het veld zonder op te slaan.</span>
+            </div>
+          </div>
+        </div>
+        <p style="margin-top:12px"><strong>Daarna:</strong> open Obsidian om de backlog te bekijken, klik ▶️ Analyseer taken voor het plan, en ✅ Bevestig en bouw om te starten.</p>
       </div>
 
       <div class="docs-section">
@@ -825,19 +922,26 @@ claude --version      # moet werken</div>
       const container = document.getElementById('projects');
       container.innerHTML = projects.map(p => `
         <div class="card">
-          <div class="card-info">
-            <div class="card-name">${p.label}</div>
-            <div class="card-meta">
-              ${p.github ? `<a href="${p.github}" target="_blank">GitHub</a>` : ''}
-              ${p.vercel ? ` · <a href="${p.vercel}" target="_blank">Vercel</a>` : ''}
-              <span style="color:#333"> · </span>${p.folder}
+          <div class="card-main">
+            <div class="card-info">
+              <div class="card-name">${p.label}</div>
+              <div class="card-meta">
+                ${p.github ? `<a href="${p.github}" target="_blank">GitHub</a>` : ''}
+                ${p.vercel ? ` · <a href="${p.vercel}" target="_blank">Vercel</a>` : ''}
+                <span style="color:#333"> · </span>${p.folder}
+              </div>
+            </div>
+            <div class="card-actions">
+              <button class="btn btn-task" onclick="toggleTask('${p.name}')" title="Taak toevoegen aan backlog">+ Taak</button>
+              <button class="btn btn-start" onclick="start('${p.name}', '${p.folder}')">🚀 Start</button>
+              <button class="btn btn-stop" onclick="stop('${p.name}')">🛑 Stop</button>
+              <button class="btn btn-reset" onclick="reset('${p.name}')" title="Reset: kill tmux + claude processen">🔄 Reset</button>
+              <button class="btn btn-danger" onclick="startDanger('${p.name}', '${p.folder}')" title="Start met --dangerously-skip-permissions">⚠️</button>
             </div>
           </div>
-          <div class="card-actions">
-            <button class="btn btn-start" onclick="start('${p.name}', '${p.folder}')">🚀 Start</button>
-            <button class="btn btn-stop" onclick="stop('${p.name}')">🛑 Stop</button>
-            <button class="btn btn-reset" onclick="reset('${p.name}')" title="Reset: kill tmux + claude processen">🔄 Reset</button>
-            <button class="btn btn-danger" onclick="startDanger('${p.name}', '${p.folder}')" title="Start met --dangerously-skip-permissions">⚠️</button>
+          <div class="task-row" id="task-row-${p.name}">
+            <input type="text" id="task-input-${p.name}" placeholder="Beschrijf wat er gebouwd moet worden..." />
+            <button class="btn-add-task" onclick="addTask('${p.name}')">Toevoegen</button>
           </div>
         </div>
       `).join('');
@@ -858,6 +962,38 @@ claude --version      # moet werken</div>
     function reset(name) {
       window.open(`${N8N}/reset-project?session=${name}`, '_blank');
     }
+
+    function toggleTask(name) {
+      const row = document.getElementById('task-row-' + name);
+      const input = document.getElementById('task-input-' + name);
+      const isOpen = row.classList.toggle('open');
+      if (isOpen) {
+        input.focus();
+      } else {
+        input.value = '';
+      }
+    }
+
+    function addTask(name) {
+      const input = document.getElementById('task-input-' + name);
+      const task = input.value.trim();
+      if (!task) return;
+      window.open(`${N8N}/add-task?project=${encodeURIComponent(name)}&task=${encodeURIComponent(task)}`, '_blank');
+      input.value = '';
+      document.getElementById('task-row-' + name).classList.remove('open');
+    }
+
+    // Enter key in task input
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.target.id && e.target.id.startsWith('task-input-')) {
+        const name = e.target.id.replace('task-input-', '');
+        addTask(name);
+      }
+      if (e.key === 'Escape' && e.target.id && e.target.id.startsWith('task-input-')) {
+        const name = e.target.id.replace('task-input-', '');
+        toggleTask(name);
+      }
+    });
 
     function newProject() {
       const name = document.getElementById('new-name').value.trim().toLowerCase().replace(/\s+/g, '-');

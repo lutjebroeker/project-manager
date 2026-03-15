@@ -51,6 +51,15 @@
       "webhook": "/webhook/build-task?project=X&folder=Y",
       "updatedAt": "2026-03-15T00:00:00.000Z",
       "notes": "SSH Obsidian node: selecteer 'SSH Obsidian/OpenCode/Fabric' credential in n8n UI. Toggle uit/aan om webhook te registreren."
+    },
+    {
+      "id": "qYqZxOMNgbKCbeXT",
+      "name": "Voeg Taak Toe",
+      "file": "workflows/qYqZxOMNgbKCbeXT__voeg-taak-toe.json",
+      "active": false,
+      "webhook": "/webhook/add-task?project=X&task=Y",
+      "updatedAt": "2026-03-15T11:16:13.221Z",
+      "notes": "Voegt een - [ ] taak toe aan ## Backlog in de Obsidian project note. Toggle uit/aan om webhook te registreren."
     }
   ]
 }

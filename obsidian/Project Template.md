@@ -41,6 +41,7 @@ Beschrijving van het project.
 ---
 
 ## Taken uitvoeren
+- ➕ [Taak toevoegen](https://n8n.jellespek.nl/webhook/add-task?project=project-name&task=omschrijving) — voeg een taak toe aan Backlog (vervang `omschrijving`)
 - ▶️ [Analyseer taken](https://n8n.jellespek.nl/webhook/analyse-tasks?project=project-name) — leest Backlog, schrijft Plan terug
 - ✅ [Bevestig en bouw](https://n8n.jellespek.nl/webhook/build-task?project=project-name&folder=/root/projects/project-name) — start Claude Code sessie met TASK.md
 

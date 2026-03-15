@@ -1,0 +1,57 @@
+{
+  "id": "qYqZxOMNgbKCbeXT",
+  "name": "Voeg Taak Toe",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "createdAt": "2026-03-15T11:16:13.221Z",
+  "updatedAt": "2026-03-15T11:16:13.221Z",
+  "tags": [],
+  "nodes": [
+    {
+      "id": "wh-task", "name": "Webhook", "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1, "position": [-400, 0],
+      "parameters": {"path": "add-task", "responseMode": "responseNode", "options": {}}
+    },
+    {
+      "id": "ssh-read", "name": "Lees project note", "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1, "position": [-200, 0],
+      "parameters": {"command": "=cat \"/home/obsidian/Documents/PersonalAssistant/11. Projects/02. Active/{{ $json.query.project }}.md\" 2>/dev/null || echo 'FILE_NOT_FOUND'"},
+      "credentials": {"sshPassword": {"id": "EECVUs7eT0Z13I2v", "name": "SSH Obsidian/OpenCode/Fabric"}}
+    },
+    {
+      "id": "code-append", "name": "Voeg taak toe aan backlog", "type": "n8n-nodes-base.code",
+      "typeVersion": 2, "position": [0, 0],
+      "parameters": {"jsCode": "const fileContent = $input.first().json.stdout || '';\nconst project = $('Webhook').first().json.query.project;\nconst task = $('Webhook').first().json.query.task || '';\n\nif (fileContent.trim() === 'FILE_NOT_FOUND') {\n  return [{ json: { hasError: true, errorType: 'file_not_found', project } }];\n}\n\nif (!task.trim()) {\n  return [{ json: { hasError: true, errorType: 'empty_task', project } }];\n}\n\nconst newTodo = `- [ ] ${task.trim()}`;\n\nlet updated = fileContent;\n\n// Find ## Backlog section and append after the existing todos\nconst backlogMatch = updated.match(/(## Backlog[\\r\\n]([\\s\\S]*?)(?=[\\n]## |[\\n]---|$))/m);\n\nif (backlogMatch) {\n  const backlogSection = backlogMatch[1];\n  const commentEnd = backlogSection.lastIndexOf('-->');\n  if (commentEnd !== -1) {\n    // Insert after the comment\n    const insertPos = updated.indexOf(backlogSection) + commentEnd + 3;\n    updated = updated.slice(0, insertPos) + '\\n' + newTodo + updated.slice(insertPos);\n  } else {\n    // Append at end of backlog section\n    const insertPos = updated.indexOf(backlogSection) + backlogSection.length;\n    updated = updated.slice(0, insertPos).trimEnd() + '\\n' + newTodo + '\\n' + updated.slice(insertPos);\n  }\n} else {\n  // No backlog section — append at end\n  updated = updated.trimEnd() + '\\n\\n## Backlog\\n' + newTodo + '\\n';\n}\n\nconst base64Content = Buffer.from(updated).toString('base64');\nreturn [{ json: { hasError: false, base64Content, project, task: task.trim() } }];"}
+    },
+    {
+      "id": "if-ok", "name": "Gelukt?", "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2, "position": [200, 0],
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}, "conditions": [{"id": "check-error", "leftValue": "={{ $json.hasError }}", "rightValue": true, "operator": {"type": "boolean", "operation": "notEquals"}}], "combinator": "and"}}
+    },
+    {
+      "id": "ssh-write", "name": "Schrijf note terug", "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1, "position": [400, -100],
+      "parameters": {"command": "=echo \"{{ $json.base64Content }}\" | base64 -d > \"/home/obsidian/Documents/PersonalAssistant/11. Projects/02. Active/{{ $json.project }}.md\""},
+      "credentials": {"sshPassword": {"id": "EECVUs7eT0Z13I2v", "name": "SSH Obsidian/OpenCode/Fabric"}}
+    },
+    {
+      "id": "resp-ok", "name": "Taak toegevoegd", "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5, "position": [600, -100],
+      "parameters": {"respondWith": "text", "responseBody": "=<html><head><style>body{background:#0a0a0a;color:#e8e8e8;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px}</style></head><body><h2 style='color:#4caf50'>✓ Taak toegevoegd</h2><p style='color:#666'>\"{{ $('Voeg taak toe aan backlog').first().json.task }}\" is toegevoegd aan de backlog van <strong>{{ $('Voeg taak toe aan backlog').first().json.project }}</strong>.</p><p style='color:#444;font-size:0.85rem'>Sluit dit tabblad om terug te gaan.</p></body></html>", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "text/html"}]}}}
+    },
+    {
+      "id": "resp-err", "name": "Fout", "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5, "position": [400, 120],
+      "parameters": {"respondWith": "text", "responseBody": "=<html><head><style>body{background:#0a0a0a;color:#e8e8e8;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px}</style></head><body><h2 style='color:#f44336'>Fout</h2><p style='color:#666'>{{ $json.errorType === 'file_not_found' ? 'Project note niet gevonden. Controleer de projectnaam.' : 'Geen taakomschrijving opgegeven.' }}</p></body></html>", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "text/html"}]}}}
+    }
+  ],
+  "connections": {
+    "Webhook": {"main": [[{"node": "Lees project note", "type": "main", "index": 0}]]},
+    "Lees project note": {"main": [[{"node": "Voeg taak toe aan backlog", "type": "main", "index": 0}]]},
+    "Voeg taak toe aan backlog": {"main": [[{"node": "Gelukt?", "type": "main", "index": 0}]]},
+    "Gelukt?": {"main": [[{"node": "Schrijf note terug", "type": "main", "index": 0}], [{"node": "Fout", "type": "main", "index": 0}]]},
+    "Schrijf note terug": {"main": [[{"node": "Taak toegevoegd", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}
