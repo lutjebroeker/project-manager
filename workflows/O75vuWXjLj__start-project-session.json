@@ -145,7 +145,7 @@
     },
     {
       "parameters": {
-        "amount": 2
+        "amount": 10
       },
       "name": "Wacht op URL",
       "type": "n8n-nodes-base.wait",
@@ -156,7 +156,7 @@
     },
     {
       "parameters": {
-        "command": "=for i in $(seq 1 12); do\n  url=$(grep -o 'https://claude\\.ai/code[^ ]*' /tmp/claude-rc-{{ $('Webhook').item.json.query.session }}.txt 2>/dev/null | tail -1)\n  [ -n \"$url\" ] && echo \"$url\" && break\n  sleep 5\ndone"
+        "command": "=for i in $(seq 1 24); do\n  url=$(grep -o 'https://claude\\.ai/code[^ ]*' /tmp/claude-rc-{{ $('Webhook').item.json.query.session }}.txt 2>/dev/null | tail -1)\n  [ -n \"$url\" ] && echo \"$url\" && break\n  sleep 5\ndone"
       },
       "name": "Haal Remote URL op",
       "type": "n8n-nodes-base.ssh",

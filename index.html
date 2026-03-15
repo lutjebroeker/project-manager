@@ -1239,6 +1239,22 @@ npm install -g @anthropic-ai/claude-code</div></div>
           </div>
         </div>
         <div class="settings-section">
+          <h3>SSH Server</h3>
+          <div class="field">
+            <label for="setting-ssh-host">Server host</label>
+            <input type="text" id="setting-ssh-host" placeholder="192.168.1.34" />
+            <span class="field-hint">Ter referentie en troubleshooting. SSH credentials worden in n8n beheerd.</span>
+          </div>
+          <div class="field">
+            <label for="setting-projects-root">Projects root pad</label>
+            <input type="text" id="setting-projects-root" placeholder="/root/projects" />
+            <span class="field-hint">Wordt gebruikt als standaard pad bij het aanmaken van nieuwe projecten.</span>
+          </div>
+          <div style="margin-top:12px">
+            <button class="btn btn-ghost btn-sm" onclick="saveSettings()">Opslaan</button>
+          </div>
+        </div>
+        <div class="settings-section">
           <h3>Projecten</h3>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-ghost btn-sm" onclick="exportProjects()">Exporteer projecten</button>
@@ -1375,6 +1391,12 @@ const Store = {
 
   getN8N() {
     return (this.ui.n8nBase || 'https://n8n.jellespek.nl/webhook').replace(/\/$/, '');
+  },
+  getProjectsRoot() {
+    return (this.ui.projectsRoot || '/root/projects').replace(/\/$/, '');
+  },
+  getSSHHost() {
+    return this.ui.sshHost || '192.168.1.34';
   },
 
   setStatus(id, status) {
@@ -1736,9 +1758,11 @@ document.addEventListener('keydown', e => {
 // ADD / EDIT PANEL
 // ────────────────────────────────────────────────────────
 let slugEdited = false;
+let folderEdited = false;
 
 function openAddPanel() {
   slugEdited = false;
+  folderEdited = false;
   document.getElementById('panel-title').textContent = 'Project toevoegen';
   document.getElementById('panel-save-btn').textContent = 'Toevoegen';
   document.getElementById('panel-project-id').value = '';
@@ -1756,6 +1780,7 @@ function openEditPanel(id) {
   const p = getProject(id);
   if (!p) return;
   slugEdited = true;
+  folderEdited = true;
   document.getElementById('panel-title').textContent = 'Project bewerken';
   document.getElementById('panel-save-btn').textContent = 'Opslaan';
   document.getElementById('panel-project-id').value = p.id;
@@ -1787,6 +1812,7 @@ function closePanel() {
   document.getElementById('panel-vercel').value = '';
   document.getElementById('panel-group').value = 'personal';
   slugEdited = false;
+  folderEdited = false;
 }
 
 function closePanelOnOverlay(e) {
@@ -1796,10 +1822,15 @@ function closePanelOnOverlay(e) {
 function deriveSlug() {
   if (slugEdited) return;
   const label = document.getElementById('panel-label').value;
-  document.getElementById('panel-name').value = label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const slug = label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  document.getElementById('panel-name').value = slug;
+  if (!folderEdited) {
+    document.getElementById('panel-folder').value = slug ? Store.getProjectsRoot() + '/' + slug : '';
+  }
 }
 
 document.getElementById('panel-name').addEventListener('input', () => { slugEdited = true; });
+document.getElementById('panel-folder').addEventListener('input', () => { folderEdited = true; });
 
 function saveProject() {
   const id = document.getElementById('panel-project-id').value;
@@ -2061,13 +2092,23 @@ function copyText(text, el) {
 // ────────────────────────────────────────────────────────
 function saveSettings() {
   const url = document.getElementById('setting-n8n-url').value.trim();
+  const sshHost = document.getElementById('setting-ssh-host').value.trim();
+  const projectsRoot = document.getElementById('setting-projects-root').value.trim();
   if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
     toast('error', 'URL moet beginnen met http:// of https://');
+    return;
+  }
+  if (projectsRoot && !projectsRoot.startsWith('/')) {
+    toast('error', 'Projects root moet beginnen met /');
     return;
   }
   const ui = Store.ui;
   if (url) ui.n8nBase = url;
   else delete ui.n8nBase;
+  if (sshHost) ui.sshHost = sshHost;
+  else delete ui.sshHost;
+  if (projectsRoot) ui.projectsRoot = projectsRoot;
+  else delete ui.projectsRoot;
   Store.ui = ui;
   toast('success', 'Instellingen opgeslagen');
 }
@@ -2115,6 +2156,8 @@ function clearActivity() {
 
 // Load settings into form
 document.getElementById('setting-n8n-url').value = Store.ui.n8nBase || '';
+document.getElementById('setting-ssh-host').value = Store.ui.sshHost || '';
+document.getElementById('setting-projects-root').value = Store.ui.projectsRoot || '';
 
 // ────────────────────────────────────────────────────────
 // INIT
