@@ -15,15 +15,36 @@
       padding: 40px 24px;
     }
 
-    h1 {
-      font-size: 1.2rem;
-      font-weight: 500;
-      color: #666;
-      margin-bottom: 32px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
+    /* Nav */
+    nav {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 40px;
+      max-width: 720px;
     }
 
+    .nav-tab {
+      background: none;
+      border: none;
+      border-radius: 6px;
+      color: #444;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      padding: 6px 14px;
+      text-transform: uppercase;
+      transition: color 0.15s, background 0.15s;
+    }
+
+    .nav-tab:hover { color: #888; }
+    .nav-tab.active { background: #1a1a1a; color: #e8e8e8; }
+
+    /* Views */
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Projects view */
     .new-project {
       display: flex;
       gap: 10px;
@@ -90,23 +111,211 @@
       color: #555;
     }
 
-    .card-meta a {
-      color: #555;
-      text-decoration: none;
-    }
-
+    .card-meta a { color: #555; text-decoration: none; }
     .card-meta a:hover { color: #888; }
 
     .card-actions { display: flex; gap: 8px; flex-shrink: 0; }
 
-    .status {
-      display: inline-block;
-      font-size: 0.75rem;
-      padding: 3px 8px;
-      border-radius: 4px;
-      margin-bottom: 4px;
+    /* Docs view */
+    .docs { max-width: 720px; }
+
+    .docs-section {
+      margin-bottom: 48px;
     }
 
+    .docs-section h2 {
+      color: #666;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    .docs-section p {
+      color: #aaa;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+
+    .docs-section p:last-child { margin-bottom: 0; }
+
+    /* Flow steps */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .flow-step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .flow-line {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .flow-dot {
+      width: 8px;
+      height: 8px;
+      background: #333;
+      border-radius: 50%;
+      margin-top: 5px;
+      flex-shrink: 0;
+    }
+
+    .flow-connector {
+      width: 1px;
+      flex: 1;
+      min-height: 20px;
+      background: #1e1e1e;
+      margin: 4px 0;
+    }
+
+    .flow-step:last-child .flow-connector { display: none; }
+
+    .flow-content {
+      padding-bottom: 20px;
+    }
+
+    .flow-content strong {
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .flow-content span {
+      font-size: 0.8rem;
+      color: #555;
+    }
+
+    /* Links grid */
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .link-card {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 10px;
+      padding: 14px 16px;
+      text-decoration: none;
+      transition: border-color 0.15s;
+      display: block;
+    }
+
+    .link-card:hover { border-color: #333; }
+
+    .link-card-label {
+      font-size: 0.7rem;
+      color: #444;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .link-card-name {
+      font-size: 0.9rem;
+      color: #e8e8e8;
+      font-weight: 500;
+    }
+
+    /* Workflow table */
+    .wf-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .wf-card {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+
+    .wf-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .wf-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .wf-badge {
+      font-size: 0.7rem;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: #1a3a1a;
+      color: #4caf50;
+    }
+
+    .wf-webhook {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.78rem;
+      color: #555;
+      margin-bottom: 6px;
+      word-break: break-all;
+    }
+
+    .wf-desc {
+      font-size: 0.8rem;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    /* Code block */
+    .code-block {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 10px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: #888;
+      padding: 16px 20px;
+      line-height: 1.7;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* Todo */
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.88rem;
+      color: #666;
+    }
+
+    .todo-item::before {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border: 1px solid #2a2a2a;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    /* Toast */
     .toast {
       position: fixed;
       bottom: 24px;
@@ -127,14 +336,165 @@
 </head>
 <body>
 
-  <h1>Projects</h1>
+  <nav>
+    <button class="nav-tab active" onclick="showView('projects', this)">Projects</button>
+    <button class="nav-tab" onclick="showView('docs', this)">Docs</button>
+  </nav>
 
-  <div class="new-project">
-    <input id="new-name" type="text" placeholder="project-naam" />
-    <button class="btn btn-create" onclick="newProject()">🔨 Nieuw project</button>
+  <!-- PROJECTS VIEW -->
+  <div id="view-projects" class="view active">
+    <div class="new-project">
+      <input id="new-name" type="text" placeholder="project-naam" />
+      <button class="btn btn-create" onclick="newProject()">🔨 Nieuw project</button>
+    </div>
+    <div class="projects" id="projects"></div>
   </div>
 
-  <div class="projects" id="projects"></div>
+  <!-- DOCS VIEW -->
+  <div id="view-docs" class="view">
+    <div class="docs">
+
+      <div class="docs-section">
+        <h2>Hoe werkt het?</h2>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Klik Start sessie</strong>
+              <span>Vanuit deze site of Obsidian project note</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>n8n checkt bestaande sessie</strong>
+              <span>Als er al een claude.ai URL in de temp file staat → direct redirect</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>tmux sessie aanmaken of hergebruiken</strong>
+              <span>3 windows: claude / shell / git — in de project folder</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>claude remote-control starten</strong>
+              <span>Output → /tmp/claude-rc-{sessie}.txt op de server</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>URL pollen (max 60s)</strong>
+              <span>Elke 5 seconden checken of de claude.ai URL er al in staat</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div></div>
+            <div class="flow-content">
+              <strong>Browser redirect → claude.ai</strong>
+              <span>Direct in je project, zonder SSH</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-section">
+        <h2>Workflows</h2>
+        <div class="wf-list">
+          <div class="wf-card">
+            <div class="wf-header">
+              <span class="wf-name">Start Project Session</span>
+              <span class="wf-badge">actief</span>
+            </div>
+            <div class="wf-webhook">/webhook/start-project?session=X&folder=Y&mode=normal|dangerous</div>
+            <div class="wf-desc">Herstart of start een sessie. <code>mode=dangerous</code> voegt <code>--dangerously-skip-permissions</code> toe.</div>
+          </div>
+          <div class="wf-card">
+            <div class="wf-header">
+              <span class="wf-name">Stop Project Session</span>
+              <span class="wf-badge">actief</span>
+            </div>
+            <div class="wf-webhook">/webhook/stop-project?session=X</div>
+            <div class="wf-desc">Kill tmux sessie en verwijdert de temp file.</div>
+          </div>
+          <div class="wf-card">
+            <div class="wf-header">
+              <span class="wf-name">New Project Session</span>
+              <span class="wf-badge">actief</span>
+            </div>
+            <div class="wf-webhook">/webhook/new-project?name=X</div>
+            <div class="wf-desc">Maakt GitHub repo aan (private), clonet naar de server, start sessie.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-section">
+        <h2>Server</h2>
+        <div class="code-block">Host:          root@192.168.1.34
+Projects root: /root/projects/{naam}
+Temp files:    /tmp/claude-rc-{sessie}.txt
+tmux windows:  claude  /  shell  /  git</div>
+      </div>
+
+      <div class="docs-section">
+        <h2>Project toevoegen aan deze site</h2>
+        <p>Open <code>index.html</code> en voeg een object toe aan de <code>projects</code> array:</p>
+        <div class="code-block">{
+  name:   'project-naam',          // ook de tmux sessie naam
+  label:  'Leesbare naam',
+  folder: '/root/projects/project-naam',
+  github: 'https://github.com/lutjebroeker/project-naam',  // optioneel
+  vercel: 'https://project.vercel.app',                    // optioneel
+}</div>
+      </div>
+
+      <div class="docs-section">
+        <h2>Links</h2>
+        <div class="links-grid">
+          <a class="link-card" href="https://github.com/lutjebroeker/project-manager" target="_blank">
+            <div class="link-card-label">GitHub</div>
+            <div class="link-card-name">project-manager</div>
+          </a>
+          <a class="link-card" href="https://n8n.jellespek.nl" target="_blank">
+            <div class="link-card-label">Automatisering</div>
+            <div class="link-card-name">n8n</div>
+          </a>
+          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/issues" target="_blank">
+            <div class="link-card-label">Bugs & taken</div>
+            <div class="link-card-name">GitHub Issues</div>
+          </a>
+          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/O75vuWXjLj__start-project-session.json" target="_blank">
+            <div class="link-card-label">Workflow export</div>
+            <div class="link-card-name">Start Session</div>
+          </a>
+          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/GfmBMQOHUdegYA1o__stop-project-session.json" target="_blank">
+            <div class="link-card-label">Workflow export</div>
+            <div class="link-card-name">Stop Session</div>
+          </a>
+          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/YnOWKjbAUdJM7R9O__new-project-session.json" target="_blank">
+            <div class="link-card-label">Workflow export</div>
+            <div class="link-card-name">New Session</div>
+          </a>
+        </div>
+      </div>
+
+      <div class="docs-section">
+        <h2>Todo</h2>
+        <div class="todo-list">
+          <div class="todo-item">Cloudflare: CNAME projects → cname.vercel-dns.com</div>
+          <div class="todo-item">Vercel: domein projects.jellespek.nl toevoegen</div>
+          <div class="todo-item">Cloudflare Zero Trust Access instellen voor projects.jellespek.nl</div>
+          <div class="todo-item">SSH Debug Test workflow verwijderen in n8n</div>
+          <div class="todo-item">execution-engine en fit-journey migreren naar /root/projects/ flat structuur (optioneel)</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
 
   <div class="toast" id="toast"></div>
 
@@ -156,6 +516,13 @@
         github: 'https://github.com/lutjebroeker/fit-journey',
       },
     ];
+
+    function showView(name, tab) {
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('view-' + name).classList.add('active');
+      tab.classList.add('active');
+    }
 
     function render() {
       const container = document.getElementById('projects');
