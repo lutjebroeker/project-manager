@@ -339,6 +339,8 @@
   <nav>
     <button class="nav-tab active" onclick="showView('projects', this)">Projects</button>
     <button class="nav-tab" onclick="showView('docs', this)">Docs</button>
+    <button class="nav-tab" onclick="showView('handleiding', this)">Handleiding</button>
+    <button class="nav-tab" onclick="showView('faq', this)">FAQ</button>
   </nav>
 
   <!-- PROJECTS VIEW -->
@@ -491,6 +493,186 @@ tmux windows:  claude  /  shell  /  git</div>
           <div class="todo-item">SSH Debug Test workflow verwijderen in n8n</div>
           <div class="todo-item">execution-engine en fit-journey migreren naar /root/projects/ flat structuur (optioneel)</div>
         </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- HANDLEIDING VIEW -->
+  <div id="view-handleiding" class="view">
+    <div class="docs">
+
+      <div class="docs-section">
+        <h2>Bestaand project starten</h2>
+        <p><strong>Vanuit de site:</strong> klik 🚀 Start bij het project. De browser opent automatisch de claude.ai sessie (kan 10–60 seconden duren).</p>
+        <p><strong>Vanuit Obsidian:</strong> open de project note en klik de 🚀 Start sessie link. Zelfde flow.</p>
+        <p><strong>⚠️ Skip permissions:</strong> gebruik alleen als Claude om bevestiging vraagt bij elke actie en je dat wil overslaan. Voegt <code>--dangerously-skip-permissions</code> toe.</p>
+      </div>
+
+      <div class="docs-section">
+        <h2>Nieuw project aanmaken</h2>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Typ een project naam</strong>
+              <span>Gebruik alleen kleine letters en koppeltekens, bijv. <code>mijn-project</code></span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Klik 🔨 Nieuw project</strong>
+              <span>n8n maakt een private GitHub repo aan onder <code>lutjebroeker/{naam}</code></span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Repo wordt gekloond op de server</strong>
+              <span>Naar <code>/root/projects/{naam}</code></span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Sessie start automatisch</strong>
+              <span>Browser redirect naar claude.ai — direct in het nieuwe project</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div></div>
+            <div class="flow-content">
+              <strong>Voeg project toe aan de site</strong>
+              <span>Handmatige stap: voeg het toe aan <code>projects[]</code> in <code>index.html</code> en push</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-section">
+        <h2>Project toevoegen aan de site</h2>
+        <p>Open <code>index.html</code> lokaal en voeg een object toe aan de <code>projects</code> array (rond regel 270):</p>
+        <div class="code-block">{
+  name:   'project-naam',
+  label:  'Leesbare naam',
+  folder: '/root/projects/project-naam',
+  github: 'https://github.com/lutjebroeker/project-naam',
+  vercel: 'https://project.vercel.app',  // weglaten als niet van toepassing
+}</div>
+        <p>Commit en push → Vercel deployt automatisch.</p>
+      </div>
+
+      <div class="docs-section">
+        <h2>Project note aanmaken in Obsidian</h2>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Nieuwe note aanmaken via template</strong>
+              <span>Gebruik de template <code>90. Templates/Project Template.md</code></span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Vervang <code>project-name</code> door de echte naam</strong>
+              <span>In frontmatter én in alle vier de links — zelfde naam als tmux sessie en GitHub repo</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div></div>
+            <div class="flow-content">
+              <strong>Sla op in <code>11. Projects/02. Active/</code></strong>
+              <span>Links werken daarna direct vanuit Obsidian</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-section">
+        <h2>Sessie stoppen</h2>
+        <p>Klik 🛑 Stop bij het project op de site, of de Stop sessie link in Obsidian. Dit kill de tmux sessie en verwijdert de temp file op de server. De claude.ai tab gaat vanzelf dood.</p>
+        <p>Na stoppen kun je direct opnieuw starten — er wordt dan een nieuwe sessie aangemaakt.</p>
+      </div>
+
+      <div class="docs-section">
+        <h2>Workflow importeren in n8n</h2>
+        <p>Nodig bij een herinstallatie of migratie van n8n:</p>
+        <div class="code-block">1. n8n → Workflows → Import from file
+2. Upload JSON uit /workflows/ in de GitHub repo
+3. Controleer credentials: "SSH Claude Code" moet bestaan
+4. New Project Session: vervang {{GITHUB_PAT}} door je GitHub token
+5. Toggle workflow uit → aan om webhook te registreren</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FAQ VIEW -->
+  <div id="view-faq" class="view">
+    <div class="docs">
+
+      <div class="docs-section">
+        <h2>Sessie start maar ik word niet geredirect</h2>
+        <p><strong>Symptoom:</strong> de pagina laadt lang en geeft dan "Fout: geen Claude URL gevonden."</p>
+        <p><strong>Oorzaak:</strong> <code>claude remote-control</code> heeft de URL nog niet naar het temp bestand geschreven binnen 60 seconden.</p>
+        <p><strong>Oplossing:</strong> wacht 10 seconden en klik opnieuw op Start. De workflow checkt eerst of er al een URL in de temp file staat — als Claude al draait, redirect je direct.</p>
+      </div>
+
+      <div class="docs-section">
+        <h2>claude.ai tab geeft een foutmelding na openen</h2>
+        <p><strong>Oorzaak:</strong> de sessie URL is verlopen. claude.ai remote-control URLs zijn eenmalig en tijdelijk.</p>
+        <p><strong>Oplossing:</strong> stop de sessie en start opnieuw. Er wordt dan een nieuwe URL gegenereerd.</p>
+      </div>
+
+      <div class="docs-section">
+        <h2>Stop knop lijkt niet te werken</h2>
+        <p><strong>Oorzaak:</strong> de <code>fetch()</code> naar n8n kan falen door CORS, maar de sessie is op de server wél gestopt.</p>
+        <p><strong>Check:</strong> probeer daarna opnieuw Start — als er geen bestaande URL gevonden wordt en een nieuwe sessie opstart, was de stop succesvol.</p>
+        <p><strong>Alternatief:</strong> open de Stop-link direct: <code>https://n8n.jellespek.nl/webhook/stop-project?session=project-naam</code></p>
+      </div>
+
+      <div class="docs-section">
+        <h2>Nieuw project mislukt (GitHub repo niet aangemaakt)</h2>
+        <p><strong>Oorzaak:</strong> de GitHub Personal Access Token (PAT) in de <em>New Project Session</em> workflow is verlopen of ingetrokken.</p>
+        <p><strong>Oplossing:</strong></p>
+        <div class="code-block">1. Ga naar github.com → Settings → Developer settings → Personal access tokens
+2. Maak een nieuwe token aan (scope: repo)
+3. Open n8n → New Project Session workflow
+4. Update de Authorization header en de clone URL met de nieuwe token
+5. Sla op en activeer opnieuw</div>
+      </div>
+
+      <div class="docs-section">
+        <h2>tmux sessie bestaat al maar Claude reageert niet</h2>
+        <p><strong>Oorzaak:</strong> de tmux sessie leeft nog maar <code>claude remote-control</code> is gecrasht of gestopt.</p>
+        <p><strong>Oplossing:</strong> stop de sessie via de site en start opnieuw. Start verwijdert de temp file, stuurt <code>C-c</code> naar het claude window en herstart <code>remote-control</code>.</p>
+      </div>
+
+      <div class="docs-section">
+        <h2>Server niet bereikbaar / n8n geeft timeout</h2>
+        <p><strong>Check 1:</strong> is de Proxmox server aan? Host: <code>192.168.1.34</code></p>
+        <p><strong>Check 2:</strong> draait n8n nog? Ga naar <a href="https://n8n.jellespek.nl" target="_blank" style="color:#555">n8n.jellespek.nl</a> — laadt de UI?</p>
+        <p><strong>Check 3:</strong> SSH handmatig proberen: <code>ssh root@192.168.1.34</code></p>
+        <p><strong>Check 4:</strong> controleer of Docker nog draait op de server: <code>docker ps</code></p>
+      </div>
+
+      <div class="docs-section">
+        <h2>claude commando niet gevonden op de server</h2>
+        <p><strong>Symptoom:</strong> sessie start, temp file blijft leeg, geen URL na 60 seconden.</p>
+        <p><strong>Oorzaak:</strong> <code>claude</code> is niet geïnstalleerd of niet in <code>$PATH</code> voor de tmux sessie.</p>
+        <p><strong>Check via SSH:</strong></p>
+        <div class="code-block">ssh root@192.168.1.34
+which claude          # moet een pad teruggeven
+claude --version      # moet werken</div>
+        <p>Indien niet gevonden: <code>npm install -g @anthropic-ai/claude-code</code></p>
+      </div>
+
+      <div class="docs-section">
+        <h2>Vercel deployment werkt niet na push</h2>
+        <p><strong>Check:</strong> ga naar <a href="https://vercel.com" target="_blank" style="color:#555">vercel.com</a> → project <em>project-manager</em> → Deployments. Staat er een failed build?</p>
+        <p><strong>Meest voorkomende oorzaak:</strong> syntax fout in <code>index.html</code>. Open de build logs voor details.</p>
       </div>
 
     </div>
