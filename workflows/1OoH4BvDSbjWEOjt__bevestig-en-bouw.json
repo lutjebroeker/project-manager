@@ -1,0 +1,76 @@
+{
+  "id": "1OoH4BvDSbjWEOjt",
+  "name": "Bevestig en Bouw",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "createdAt": "2026-03-15T00:00:00.000Z",
+  "updatedAt": "2026-03-15T00:00:00.000Z",
+  "tags": [],
+  "nodes": [
+    {
+      "id": "wh-build", "name": "Webhook", "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1, "position": [-400, 0],
+      "parameters": {"path": "build-task", "responseMode": "responseNode", "options": {}}
+    },
+    {
+      "id": "ssh-read-plan", "name": "Lees plan uit Obsidian", "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1, "position": [-200, 0],
+      "parameters": {"command": "=cat \"/home/obsidian/Documents/PersonalAssistant/11. Projects/02. Active/{{ $json.query.project }}.md\" 2>/dev/null || echo 'FILE_NOT_FOUND'"},
+      "credentials": {"sshPassword": {"id": "OBSIDIAN_SSH_PLACEHOLDER", "name": "SSH Obsidian/OpenCode/Fabric"}}
+    },
+    {
+      "id": "code-extract-plan", "name": "Extraheer plan", "type": "n8n-nodes-base.code",
+      "typeVersion": 2, "position": [0, 0],
+      "parameters": {"jsCode": "const fileContent = $input.first().json.stdout || '';\nconst project = $('Webhook').first().json.query.project;\nconst folder = $('Webhook').first().json.query.folder || `/root/projects/${project}`;\n\nif (fileContent.trim() === 'FILE_NOT_FOUND') {\n  return [{ json: { hasPlan: false, errorType: 'file_not_found', project, folder } }];\n}\n\nconst planMatch = fileContent.match(/## Plan[\\r\\n]([\\s\\S]*?)(?=[\\n]## |[\\n]---|$)/m);\nconst plan = planMatch ? planMatch[1].trim() : '';\n\nif (!plan) {\n  return [{ json: { hasPlan: false, errorType: 'no_plan', project, folder } }];\n}\n\nconst taskContent = `# Taak: ${project}\\nGegenereerd op: ${new Date().toLocaleString('nl-NL')}\\n\\n---\\n\\n${plan}\\n\\n---\\n\\n> Verwijder of overschrijf dit bestand na voltooiing.`;\nconst base64Task = Buffer.from(taskContent).toString('base64');\n\nreturn [{ json: { hasPlan: true, plan, project, folder, base64Task } }];"}
+    },
+    {
+      "id": "if-plan", "name": "Plan aanwezig?", "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2, "position": [200, 0],
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}, "conditions": [{"id": "check-plan", "leftValue": "={{ $json.hasPlan }}", "rightValue": true, "operator": {"type": "boolean", "operation": "equals"}}], "combinator": "and"}}
+    },
+    {
+      "id": "ssh-setup", "name": "Schrijf TASK.md en start sessie", "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1, "position": [400, -100],
+      "parameters": {"command": "=mkdir -p {{ $json.folder }} && echo \"{{ $json.base64Task }}\" | base64 -d > {{ $json.folder }}/TASK.md && tmux kill-session -t {{ $json.project }} 2>/dev/null; rm -f /tmp/claude-rc-{{ $json.project }}.txt; pkill -f \"remote-control\" 2>/dev/null; tmux new-session -d -s {{ $json.project }} -n claude -c {{ $json.folder }} && tmux new-window -t {{ $json.project }} -n shell -c {{ $json.folder }} && tmux new-window -t {{ $json.project }} -n git -c {{ $json.folder }} && tmux send-keys -t {{ $json.project }}:claude 'claude --dangerously-skip-permissions > /tmp/claude-rc-{{ $json.project }}.txt 2>&1' Enter && echo 'started'"},
+      "credentials": {"sshPassword": {"id": "OdKR4WxKZwBUMzZ5", "name": "SSH Claude Code"}}
+    },
+    {
+      "id": "wait-url", "name": "Wacht op URL", "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1, "position": [600, -100],
+      "parameters": {"amount": 3}
+    },
+    {
+      "id": "ssh-poll", "name": "Haal Remote URL op", "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1, "position": [800, -100],
+      "parameters": {"command": "=for i in $(seq 1 12); do\n  url=$(grep -o 'https://claude\\.ai/code[^ ]*' /tmp/claude-rc-{{ $('Webhook').item.json.query.project }}.txt 2>/dev/null | tail -1)\n  [ -n \"$url\" ] && echo \"$url\" && break\n  sleep 5\ndone"},
+      "credentials": {"sshPassword": {"id": "OdKR4WxKZwBUMzZ5", "name": "SSH Claude Code"}}
+    },
+    {
+      "id": "code-redirect", "name": "Maak redirect", "type": "n8n-nodes-base.code",
+      "typeVersion": 2, "position": [1000, -100],
+      "parameters": {"jsCode": "const url = $input.first().json.stdout.trim();\nconst project = $('Webhook').first().json.query.project;\nif (!url) {\n  return [{ json: { html: `<html><head><style>body{background:#0a0a0a;color:#e8e8e8;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px}</style></head><body><h2 style='color:#ff9800'>TASK.md aangemaakt</h2><p style='color:#666'>Geen Claude URL gevonden. Start de sessie handmatig voor <strong>${project}</strong>.</p></body></html>` } }];\n}\nreturn [{ json: { html: `<html><head><meta http-equiv=\"refresh\" content=\"0; url=${url}\"></head><body>Verbinding maken met Claude...</body></html>` } }];"}
+    },
+    {
+      "id": "resp-build", "name": "Redirect naar sessie", "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5, "position": [1200, -100],
+      "parameters": {"respondWith": "text", "responseBody": "={{ $json.html }}", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "text/html"}]}}}
+    },
+    {
+      "id": "resp-no-plan", "name": "Geen plan gevonden", "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5, "position": [400, 120],
+      "parameters": {"respondWith": "text", "responseBody": "=<html><head><style>body{background:#0a0a0a;color:#e8e8e8;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px}</style></head><body><h2 style='color:#f44336'>Geen plan gevonden</h2><p style='color:#666'>{{ $json.errorType === 'file_not_found' ? 'Project note niet gevonden.' : 'Geen ## Plan sectie in de note. Klik eerst ▶️ Analyseer taken.' }}</p></body></html>", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "text/html"}]}}}
+    }
+  ],
+  "connections": {
+    "Webhook": {"main": [[{"node": "Lees plan uit Obsidian", "type": "main", "index": 0}]]},
+    "Lees plan uit Obsidian": {"main": [[{"node": "Extraheer plan", "type": "main", "index": 0}]]},
+    "Extraheer plan": {"main": [[{"node": "Plan aanwezig?", "type": "main", "index": 0}]]},
+    "Plan aanwezig?": {"main": [[{"node": "Schrijf TASK.md en start sessie", "type": "main", "index": 0}], [{"node": "Geen plan gevonden", "type": "main", "index": 0}]]},
+    "Schrijf TASK.md en start sessie": {"main": [[{"node": "Wacht op URL", "type": "main", "index": 0}]]},
+    "Wacht op URL": {"main": [[{"node": "Haal Remote URL op", "type": "main", "index": 0}]]},
+    "Haal Remote URL op": {"main": [[{"node": "Maak redirect", "type": "main", "index": 0}]]},
+    "Maak redirect": {"main": [[{"node": "Redirect naar sessie", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}

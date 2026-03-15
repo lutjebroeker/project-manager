@@ -1,0 +1,70 @@
+{
+  "id": "xOXAVQQKh7EMWfOR",
+  "name": "Analyseer Taken",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "createdAt": "2026-03-15T00:00:00.000Z",
+  "updatedAt": "2026-03-15T00:00:00.000Z",
+  "tags": [],
+  "nodes": [
+    {
+      "id": "wh-analyse", "name": "Webhook", "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1, "position": [-400, 0],
+      "parameters": {"path": "analyse-tasks", "responseMode": "responseNode", "options": {}}
+    },
+    {
+      "id": "ssh-read-note", "name": "Lees project note", "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1, "position": [-200, 0],
+      "parameters": {"command": "=cat \"/home/obsidian/Documents/PersonalAssistant/11. Projects/02. Active/{{ $json.query.project }}.md\" 2>/dev/null || echo 'FILE_NOT_FOUND'"},
+      "credentials": {"sshPassword": {"id": "OBSIDIAN_SSH_PLACEHOLDER", "name": "SSH Obsidian/OpenCode/Fabric"}}
+    },
+    {
+      "id": "code-parse", "name": "Parseer backlog", "type": "n8n-nodes-base.code",
+      "typeVersion": 2, "position": [0, 0],
+      "parameters": {"jsCode": "const stdout = $input.first().json.stdout || '';\nconst project = $('Webhook').first().json.query.project;\n\nif (!stdout || stdout.trim() === 'FILE_NOT_FOUND') {\n  return [{ json: { hasError: true, errorType: 'file_not_found', project } }];\n}\n\nconst backlogMatch = stdout.match(/## Backlog[\\r\\n]([\\s\\S]*?)(?=[\\n]## |[\\n]---|$)/m);\nconst backlogContent = backlogMatch ? backlogMatch[1] : '';\n\nconst todos = backlogContent.split('\\n')\n  .filter(line => line.match(/^- \\[ \\]\\s+/))\n  .map(line => line.replace(/^- \\[ \\]\\s+/, '').trim())\n  .filter(Boolean);\n\nif (todos.length === 0) {\n  return [{ json: { hasError: true, errorType: 'no_todos', project } }];\n}\n\nconst prompt = `Je bent een senior software engineer die helpt bij projectplanning.\\n\\nProject: ${project}\\n\\nBacklog taken:\\n${todos.map((t, i) => `${i + 1}. ${t}`).join('\\n')}\\n\\nMaak een concreet implementatieplan in het Nederlands. Geef per taak:\\n- Precieze beschrijving van wat gebouwd wordt\\n- Concrete stappen (bestanden, functies, endpoints)\\n- Geschatte volgorde van implementatie\\n\\nSchrijf uitsluitend het plan als markdown, zonder inleiding of afsluiting.`;\n\nconst base64Prompt = Buffer.from(prompt).toString('base64');\nreturn [{ json: { hasError: false, todos, base64Prompt, project, fileContent: stdout } }];"}
+    },
+    {
+      "id": "if-todos", "name": "Todos gevonden?", "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2, "position": [200, 0],
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}, "conditions": [{"id": "check-error", "leftValue": "={{ $json.hasError }}", "rightValue": true, "operator": {"type": "boolean", "operation": "notEquals"}}], "combinator": "and"}}
+    },
+    {
+      "id": "ssh-claude-analyse", "name": "Claude analyseert taken", "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1, "position": [400, -100],
+      "parameters": {"command": "=echo \"{{ $json.base64Prompt }}\" | base64 -d > /tmp/analyse-{{ $json.project }}.txt && claude --dangerously-skip-permissions -p \"$(cat /tmp/analyse-{{ $json.project }}.txt)\"; rm -f /tmp/analyse-{{ $json.project }}.txt"},
+      "credentials": {"sshPassword": {"id": "OdKR4WxKZwBUMzZ5", "name": "SSH Claude Code"}}
+    },
+    {
+      "id": "code-update-note", "name": "Bereid notitie update voor", "type": "n8n-nodes-base.code",
+      "typeVersion": 2, "position": [600, -100],
+      "parameters": {"jsCode": "const fileContent = $('Lees project note').first().json.stdout;\nconst plan = $input.first().json.stdout.trim();\nconst project = $('Webhook').first().json.query.project;\n\nlet updated = fileContent;\nupdated = updated.replace(/## Plan[\\r\\n][\\s\\S]*?(?=[\\n]## |[\\n]---|$)/m, '');\nupdated = updated.replace(/\\n{3,}/g, '\\n\\n');\n\nconst planSection = `## Plan\\n\\n${plan}\\n\\n`;\n\nif (updated.includes('## Vragen')) {\n  updated = updated.replace('## Vragen', planSection + '## Vragen');\n} else if (updated.includes('## Taken uitvoeren')) {\n  updated = updated.replace('## Taken uitvoeren', planSection + '## Taken uitvoeren');\n} else {\n  updated = updated.trimEnd() + '\\n\\n' + planSection;\n}\n\nconst base64Content = Buffer.from(updated).toString('base64');\nreturn [{ json: { base64Content, project, todoCount: $('Parseer backlog').first().json.todos.length } }];"}
+    },
+    {
+      "id": "ssh-write-note", "name": "Schrijf plan terug naar Obsidian", "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1, "position": [800, -100],
+      "parameters": {"command": "=echo \"{{ $json.base64Content }}\" | base64 -d > \"/home/obsidian/Documents/PersonalAssistant/11. Projects/02. Active/{{ $json.project }}.md\""},
+      "credentials": {"sshPassword": {"id": "OBSIDIAN_SSH_PLACEHOLDER", "name": "SSH Obsidian/OpenCode/Fabric"}}
+    },
+    {
+      "id": "resp-succes", "name": "Bevestig analyse", "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5, "position": [1000, -100],
+      "parameters": {"respondWith": "text", "responseBody": "=<html><head><style>body{background:#0a0a0a;color:#e8e8e8;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;flex-direction:column;gap:16px}</style></head><body><h2 style='color:#4caf50'>✓ Plan geschreven</h2><p style='color:#666'>{{ $('Parseer backlog').first().json.todos.length }} taken geanalyseerd voor <strong>{{ $json.project }}</strong>.<br>Open Obsidian om het plan te bekijken en klik Bevestig en bouw.</p></body></html>", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "text/html"}]}}}
+    },
+    {
+      "id": "resp-error", "name": "Geen taken gevonden", "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5, "position": [400, 120],
+      "parameters": {"respondWith": "text", "responseBody": "=<html><head><style>body{background:#0a0a0a;color:#e8e8e8;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;flex-direction:column;gap:16px}</style></head><body><h2 style='color:#f44336'>Geen taken gevonden</h2><p style='color:#666'>{{ $json.errorType === 'file_not_found' ? 'Project note niet gevonden. Controleer de projectnaam.' : 'Geen openstaande taken in ## Backlog. Voeg - [ ] taken toe.' }}</p></body></html>", "options": {"responseHeaders": {"entries": [{"name": "Content-Type", "value": "text/html"}]}}}
+    }
+  ],
+  "connections": {
+    "Webhook": {"main": [[{"node": "Lees project note", "type": "main", "index": 0}]]},
+    "Lees project note": {"main": [[{"node": "Parseer backlog", "type": "main", "index": 0}]]},
+    "Parseer backlog": {"main": [[{"node": "Todos gevonden?", "type": "main", "index": 0}]]},
+    "Todos gevonden?": {"main": [[{"node": "Claude analyseert taken", "type": "main", "index": 0}], [{"node": "Geen taken gevonden", "type": "main", "index": 0}]]},
+    "Claude analyseert taken": {"main": [[{"node": "Bereid notitie update voor", "type": "main", "index": 0}]]},
+    "Bereid notitie update voor": {"main": [[{"node": "Schrijf plan terug naar Obsidian", "type": "main", "index": 0}]]},
+    "Schrijf plan terug naar Obsidian": {"main": [[{"node": "Bevestig analyse", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}

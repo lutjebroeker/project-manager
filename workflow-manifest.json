@@ -33,6 +33,24 @@
       "webhook": "/webhook/new-project?name=X",
       "updatedAt": "2026-03-14T08:40:38.306Z",
       "notes": "GitHub PAT is vervangen door {{GITHUB_PAT}} placeholder. Vul in n8n zelf in."
+    },
+    {
+      "id": "xOXAVQQKh7EMWfOR",
+      "name": "Analyseer Taken",
+      "file": "workflows/xOXAVQQKh7EMWfOR__analyseer-taken.json",
+      "active": false,
+      "webhook": "/webhook/analyse-tasks?project=X",
+      "updatedAt": "2026-03-15T00:00:00.000Z",
+      "notes": "SSH Obsidian nodes: selecteer 'SSH Obsidian/OpenCode/Fabric' credential in n8n UI. Toggle uit/aan om webhook te registreren."
+    },
+    {
+      "id": "1OoH4BvDSbjWEOjt",
+      "name": "Bevestig en Bouw",
+      "file": "workflows/1OoH4BvDSbjWEOjt__bevestig-en-bouw.json",
+      "active": false,
+      "webhook": "/webhook/build-task?project=X&folder=Y",
+      "updatedAt": "2026-03-15T00:00:00.000Z",
+      "notes": "SSH Obsidian node: selecteer 'SSH Obsidian/OpenCode/Fabric' credential in n8n UI. Toggle uit/aan om webhook te registreren."
     }
   ]
 }

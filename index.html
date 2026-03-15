@@ -358,7 +358,7 @@
     <div class="docs">
 
       <div class="docs-section">
-        <h2>Hoe werkt het?</h2>
+        <h2>Hoe werkt het? — Sessie starten</h2>
         <div class="flow">
           <div class="flow-step">
             <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
@@ -406,6 +406,40 @@
       </div>
 
       <div class="docs-section">
+        <h2>Hoe werkt het? — Obsidian planbord</h2>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Voeg todos toe in ## Backlog</strong>
+              <span>Gebruik <code>- [ ] beschrijving</code> in de Obsidian project note</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Klik ▶️ Analyseer taken</strong>
+              <span>n8n leest de backlog, stuurt naar Claude (claude -p), plan wordt teruggeschreven naar ## Plan in Obsidian</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Bekijk en bewerk het plan in Obsidian</strong>
+              <span>Claude schrijft concrete stappen per taak — pas aan naar behoefte</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div></div>
+            <div class="flow-content">
+              <strong>Klik ✅ Bevestig en bouw</strong>
+              <span>Plan wordt als TASK.md naar de server geschreven, nieuwe Claude Code sessie start, browser redirect naar claude.ai</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="docs-section">
         <h2>Workflows</h2>
         <div class="wf-list">
           <div class="wf-card">
@@ -426,11 +460,35 @@
           </div>
           <div class="wf-card">
             <div class="wf-header">
+              <span class="wf-name">Reset Project Session</span>
+              <span class="wf-badge">actief</span>
+            </div>
+            <div class="wf-webhook">/webhook/reset-project?session=X</div>
+            <div class="wf-desc">Kill tmux + verwijdert temp file + pkill remote-control processen. Gebruik als sessie niet meer reageert.</div>
+          </div>
+          <div class="wf-card">
+            <div class="wf-header">
               <span class="wf-name">New Project Session</span>
               <span class="wf-badge">actief</span>
             </div>
             <div class="wf-webhook">/webhook/new-project?name=X</div>
             <div class="wf-desc">Maakt GitHub repo aan (private), clonet naar de server, start sessie.</div>
+          </div>
+          <div class="wf-card">
+            <div class="wf-header">
+              <span class="wf-name">Analyseer Taken</span>
+              <span class="wf-badge" style="background:#1a2a3a;color:#7c9fef">obsidian</span>
+            </div>
+            <div class="wf-webhook">/webhook/analyse-tasks?project=X</div>
+            <div class="wf-desc">Leest <code>## Backlog</code> uit Obsidian note, analyseert todos via <code>claude -p</code>, schrijft plan terug naar <code>## Plan</code> sectie.</div>
+          </div>
+          <div class="wf-card">
+            <div class="wf-header">
+              <span class="wf-name">Bevestig en Bouw</span>
+              <span class="wf-badge" style="background:#1a2a3a;color:#7c9fef">obsidian</span>
+            </div>
+            <div class="wf-webhook">/webhook/build-task?project=X&folder=Y</div>
+            <div class="wf-desc">Leest <code>## Plan</code>, schrijft TASK.md naar projectfolder, start verse Claude Code sessie, redirect naar claude.ai.</div>
           </div>
         </div>
       </div>
@@ -481,6 +539,14 @@ tmux windows:  claude  /  shell  /  git</div>
           <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/YnOWKjbAUdJM7R9O__new-project-session.json" target="_blank">
             <div class="link-card-label">Workflow export</div>
             <div class="link-card-name">New Session</div>
+          </a>
+          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/xOXAVQQKh7EMWfOR__analyseer-taken.json" target="_blank">
+            <div class="link-card-label">Workflow export</div>
+            <div class="link-card-name">Analyseer Taken</div>
+          </a>
+          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/1OoH4BvDSbjWEOjt__bevestig-en-bouw.json" target="_blank">
+            <div class="link-card-label">Workflow export</div>
+            <div class="link-card-name">Bevestig en Bouw</div>
           </a>
         </div>
       </div>
@@ -565,6 +631,48 @@ tmux windows:  claude  /  shell  /  git</div>
       </div>
 
       <div class="docs-section">
+        <h2>Taken plannen en bouwen via Obsidian</h2>
+        <div class="flow">
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Open de project note in Obsidian</strong>
+              <span>Sla op in <code>11. Projects/02. Active/{project-naam}.md</code></span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Voeg taken toe in ## Backlog</strong>
+              <span>Elk item als <code>- [ ] wat er gebouwd moet worden</code></span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Klik ▶️ Analyseer taken</strong>
+              <span>Opent in nieuw tabblad — wacht tot de bevestigingspagina verschijnt (~30s). Claude analyseert de backlog en schrijft een implementatieplan terug naar ## Plan.</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
+            <div class="flow-content">
+              <strong>Bekijk het plan in Obsidian</strong>
+              <span>Pas eventueel aan. Het plan bevat concrete stappen per taak.</span>
+            </div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-line"><div class="flow-dot"></div></div>
+            <div class="flow-content">
+              <strong>Klik ✅ Bevestig en bouw</strong>
+              <span>Plan wordt als TASK.md naar de server geschreven, Claude Code sessie start, browser redirect naar claude.ai</span>
+            </div>
+          </div>
+        </div>
+        <p style="margin-top:12px"><strong>Let op:</strong> de SSH credentials voor de Obsidian workflows moeten ingesteld zijn in n8n. Zie <em>Workflow importeren</em> hieronder.</p>
+      </div>
+
+      <div class="docs-section">
         <h2>Project note aanmaken in Obsidian</h2>
         <div class="flow">
           <div class="flow-step">
@@ -602,9 +710,10 @@ tmux windows:  claude  /  shell  /  git</div>
         <p>Nodig bij een herinstallatie of migratie van n8n:</p>
         <div class="code-block">1. n8n → Workflows → Import from file
 2. Upload JSON uit /workflows/ in de GitHub repo
-3. Controleer credentials: "SSH Claude Code" moet bestaan
+3. Controleer credentials: "SSH Claude Code" en "SSH Obsidian/OpenCode/Fabric" moeten bestaan
 4. New Project Session: vervang {{GITHUB_PAT}} door je GitHub token
-5. Toggle workflow uit → aan om webhook te registreren</div>
+5. Analyseer Taken + Bevestig en Bouw: selecteer "SSH Obsidian/OpenCode/Fabric" op de Obsidian SSH nodes
+6. Toggle elke workflow uit → aan om de webhook te registreren</div>
       </div>
 
     </div>
@@ -634,10 +743,9 @@ tmux windows:  claude  /  shell  /  git</div>
       </div>
 
       <div class="docs-section">
-        <h2>Stop knop lijkt niet te werken</h2>
-        <p><strong>Oorzaak:</strong> de <code>fetch()</code> naar n8n kan falen door CORS, maar de sessie is op de server wél gestopt.</p>
-        <p><strong>Check:</strong> probeer daarna opnieuw Start — als er geen bestaande URL gevonden wordt en een nieuwe sessie opstart, was de stop succesvol.</p>
-        <p><strong>Alternatief:</strong> open de Stop-link direct: <code>https://n8n.jellespek.nl/webhook/stop-project?session=project-naam</code></p>
+        <h2>Stop / Reset knop opent een lege tab</h2>
+        <p>Normaal gedrag — de Stop en Reset knoppen openen de n8n webhook in een nieuw tabblad. n8n geeft een bevestigingspagina terug (of een lege response als de sessie al gestopt was). Sluit de tab na bevestiging.</p>
+        <p><strong>Sessie niet gestopt?</strong> Gebruik de 🔄 Reset knop: die kill zowel tmux als alle <code>remote-control</code> processen.</p>
       </div>
 
       <div class="docs-section">
