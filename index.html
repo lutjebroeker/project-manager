@@ -743,24 +743,12 @@ claude --version      # moet werken</div>
       window.open(`${N8N}/start-project?session=${name}&folder=${encodeURIComponent(folder)}&mode=dangerous`, '_blank');
     }
 
-    async function stop(name) {
-      toast(`Sessie '${name}' stoppen...`);
-      try {
-        await fetch(`${N8N}/stop-project?session=${name}`);
-        toast(`✓ Sessie '${name}' gestopt`);
-      } catch (e) {
-        toast(`Stop '${name}' gestuurd`);
-      }
+    function stop(name) {
+      window.open(`${N8N}/stop-project?session=${name}`, '_blank');
     }
 
-    async function reset(name) {
-      toast(`Sessie '${name}' resetten...`);
-      try {
-        await fetch(`${N8N}/reset-project?session=${name}`);
-        toast(`✓ '${name}' gereset — klaar om opnieuw te starten`);
-      } catch (e) {
-        toast(`Reset '${name}' gestuurd`);
-      }
+    function reset(name) {
+      window.open(`${N8N}/reset-project?session=${name}`, '_blank');
     }
 
     function newProject() {
