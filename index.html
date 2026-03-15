@@ -621,6 +621,12 @@ tmux windows:  claude  /  shell  /  git</div>
       </div>
 
       <div class="docs-section">
+        <h2>"Failed to send response. You can try again."</h2>
+        <p><strong>Oorzaak:</strong> de verbinding tussen claude.ai en het <code>remote-control</code> proces op de server is verbroken. Dit gebeurt na een tijdout, serverherstart of netwerk-onderbreking.</p>
+        <p><strong>Oplossing:</strong> stop de sessie via de site en start opnieuw. Er wordt een nieuwe <code>remote-control</code> verbinding en een nieuwe claude.ai URL aangemaakt.</p>
+      </div>
+
+      <div class="docs-section">
         <h2>claude.ai tab geeft een foutmelding na openen</h2>
         <p><strong>Oorzaak:</strong> de sessie URL is verlopen. claude.ai remote-control URLs zijn eenmalig en tijdelijk.</p>
         <p><strong>Oplossing:</strong> stop de sessie en start opnieuw. Er wordt dan een nieuwe URL gegenereerd.</p>
