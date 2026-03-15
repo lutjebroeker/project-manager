@@ -1,0 +1,87 @@
+{
+  "id": "GfmBMQOHUdegYA1o",
+  "name": "Stop Project Session",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "createdAt": "2026-03-14T07:13:51.787Z",
+  "updatedAt": "2026-03-14T08:04:29.514Z",
+  "tags": [],
+  "nodes": [
+    {
+      "id": "wh-stop-01",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-200, 0],
+      "parameters": {
+        "path": "stop-project",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "ssh-stop-01",
+      "name": "Kill sessie",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [50, 0],
+      "parameters": {
+        "command": "=tmux kill-session -t {{ $json.query.session }} 2>/dev/null; rm -f /tmp/claude-rc-{{ $json.query.session }}.txt; echo 'done'"
+      },
+      "credentials": {
+        "sshPassword": {
+          "id": "OdKR4WxKZwBUMzZ5",
+          "name": "SSH Claude Code"
+        }
+      }
+    },
+    {
+      "id": "code-stop-01",
+      "name": "Maak bevestiging",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 0],
+      "parameters": {
+        "jsCode": "const session = $('Webhook').item.json.query.session;\nreturn [{ json: { html: `<html><body><h2>Sessie '${session}' gestopt.</h2><p>Je kunt dit venster sluiten.</p></body></html>` } }];"
+      }
+    },
+    {
+      "id": "resp-stop-01",
+      "name": "Stuur bevestiging",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [550, 0],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Kill sessie", "type": "main", "index": 0 }]]
+    },
+    "Kill sessie": {
+      "main": [[{ "node": "Maak bevestiging", "type": "main", "index": 0 }]]
+    },
+    "Maak bevestiging": {
+      "main": [[{ "node": "Stuur bevestiging", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

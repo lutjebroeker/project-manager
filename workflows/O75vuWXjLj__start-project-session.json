@@ -1,0 +1,248 @@
+{
+  "id": "O75vuWXjLj_4hAsuWPFji",
+  "name": "Start Project Session",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "createdAt": "2026-03-09T19:52:21.649Z",
+  "updatedAt": "2026-03-14T08:09:55.069Z",
+  "tags": [],
+  "nodes": [
+    {
+      "parameters": {
+        "path": "start-project",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [-320, 50],
+      "id": "ece3c1d0-b56a-4ea2-862d-da6e076873b1",
+      "typeVersion": 2.1,
+      "webhookId": "85d66aa3-30d9-453d-8524-763184c381de"
+    },
+    {
+      "id": "507b5806-70bf-4165-b918-1268ff8216eb",
+      "name": "Check URL in temp file",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [-100, 50],
+      "parameters": {
+        "command": "=grep -o 'https://claude\\.ai/code[^ ]*' /tmp/claude-rc-{{ $('Webhook').item.json.query.session }}.txt 2>/dev/null | tail -1"
+      },
+      "credentials": {
+        "sshPassword": {
+          "id": "OdKR4WxKZwBUMzZ5",
+          "name": "SSH Claude Code"
+        }
+      }
+    },
+    {
+      "id": "a047fe5a-1798-4b83-85f4-99db661ff2f0",
+      "name": "IF URL gevonden",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [150, 50],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-url",
+              "leftValue": "={{ $json.stdout.trim() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "524d6310-2d29-4776-b861-82b3fe6e3eef",
+      "name": "Check tmux sessie",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [150, 280],
+      "parameters": {
+        "command": "=tmux has-session -t {{ $('Webhook').item.json.query.session }} 2>/dev/null && echo 'exists' || echo 'not_exists'"
+      },
+      "credentials": {
+        "sshPassword": {
+          "id": "OdKR4WxKZwBUMzZ5",
+          "name": "SSH Claude Code"
+        }
+      }
+    },
+    {
+      "id": "5ae9fc6d-67e4-49bf-b781-092f2990f991",
+      "name": "IF sessie bestaat",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [400, 280],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "check-session",
+              "leftValue": "={{ $json.stdout.trim() }}",
+              "rightValue": "exists",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=mkdir -p {{ $('Webhook').item.json.query.folder }} && (tmux has-session -t {{ $('Webhook').item.json.query.session }} 2>/dev/null && echo 'exists' || (tmux new-session -d -s {{ $('Webhook').item.json.query.session }} -n claude -c {{ $('Webhook').item.json.query.folder }} && tmux new-window -t {{ $('Webhook').item.json.query.session }} -n shell -c {{ $('Webhook').item.json.query.folder }} && tmux new-window -t {{ $('Webhook').item.json.query.session }} -n git -c {{ $('Webhook').item.json.query.folder }} && echo 'started'))"
+      },
+      "name": "Start tmux sessie",
+      "type": "n8n-nodes-base.ssh",
+      "position": [650, 460],
+      "id": "f5abd9e7-1fd0-4826-bf6c-9388b12d264a",
+      "typeVersion": 1,
+      "credentials": {
+        "sshPassword": {
+          "id": "OdKR4WxKZwBUMzZ5",
+          "name": "SSH Claude Code"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=rm -f /tmp/claude-rc-{{ $('Webhook').item.json.query.session }}.txt && tmux send-keys -t {{ $('Webhook').item.json.query.session }}:claude C-c && sleep 0.5 && tmux send-keys -t {{ $('Webhook').item.json.query.session }}:claude 'q' Enter && sleep 1 && tmux send-keys -t {{ $('Webhook').item.json.query.session }}:claude 'cd {{ $('Webhook').item.json.query.folder }} && claude remote-control --name \"{{ $('Webhook').item.json.query.session }}\"{{ $('Webhook').item.json.query.mode === 'dangerous' ? ' --dangerously-skip-permissions' : '' }} > /tmp/claude-rc-{{ $('Webhook').item.json.query.session }}.txt 2>&1' Enter"
+      },
+      "name": "Start Remote Control",
+      "type": "n8n-nodes-base.ssh",
+      "position": [650, 280],
+      "id": "ef15b0bc-0136-42bd-9a25-e38642109c54",
+      "typeVersion": 1,
+      "credentials": {
+        "sshPassword": {
+          "id": "OdKR4WxKZwBUMzZ5",
+          "name": "SSH Claude Code"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "name": "Wacht op URL",
+      "type": "n8n-nodes-base.wait",
+      "position": [900, 280],
+      "id": "7e206451-0245-427a-8c6a-10bd6d71d195",
+      "typeVersion": 1.1,
+      "webhookId": "cee9c4bb-ebb2-4f61-8002-6a0bbbd03c65"
+    },
+    {
+      "parameters": {
+        "command": "=for i in $(seq 1 12); do\n  url=$(grep -o 'https://claude\\.ai/code[^ ]*' /tmp/claude-rc-{{ $('Webhook').item.json.query.session }}.txt 2>/dev/null | tail -1)\n  [ -n \"$url\" ] && echo \"$url\" && break\n  sleep 5\ndone"
+      },
+      "name": "Haal Remote URL op",
+      "type": "n8n-nodes-base.ssh",
+      "position": [1150, 280],
+      "id": "7410899d-2bbf-4a73-a6af-e20dc2d9a70a",
+      "typeVersion": 1,
+      "credentials": {
+        "sshPassword": {
+          "id": "OdKR4WxKZwBUMzZ5",
+          "name": "SSH Claude Code"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const url = $input.first().json.stdout.trim();\nif (!url) {\n  return [{ json: { html: '<html><body><h2>Fout: geen Claude URL gevonden.</h2><p>Wacht even en probeer opnieuw.</p></body></html>' } }];\n}\nreturn [{ json: { html: `<html><head><meta http-equiv=\"refresh\" content=\"0; url=${url}\"></head><body>Verbinding maken met Claude...</body></html>` } }];"
+      },
+      "name": "Maak HTML redirect",
+      "type": "n8n-nodes-base.code",
+      "position": [1400, 50],
+      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Redirect naar sessie",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [1650, 50],
+      "id": "b928563b-a31e-44fa-9602-df9f56e1e3dd",
+      "typeVersion": 1.5
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Check URL in temp file", "type": "main", "index": 0 }]]
+    },
+    "Check URL in temp file": {
+      "main": [[{ "node": "IF URL gevonden", "type": "main", "index": 0 }]]
+    },
+    "IF URL gevonden": {
+      "main": [
+        [{ "node": "Maak HTML redirect", "type": "main", "index": 0 }],
+        [{ "node": "Check tmux sessie", "type": "main", "index": 0 }]
+      ]
+    },
+    "Check tmux sessie": {
+      "main": [[{ "node": "IF sessie bestaat", "type": "main", "index": 0 }]]
+    },
+    "IF sessie bestaat": {
+      "main": [
+        [{ "node": "Start Remote Control", "type": "main", "index": 0 }],
+        [{ "node": "Start tmux sessie", "type": "main", "index": 0 }]
+      ]
+    },
+    "Start tmux sessie": {
+      "main": [[{ "node": "Start Remote Control", "type": "main", "index": 0 }]]
+    },
+    "Start Remote Control": {
+      "main": [[{ "node": "Wacht op URL", "type": "main", "index": 0 }]]
+    },
+    "Wacht op URL": {
+      "main": [[{ "node": "Haal Remote URL op", "type": "main", "index": 0 }]]
+    },
+    "Haal Remote URL op": {
+      "main": [[{ "node": "Maak HTML redirect", "type": "main", "index": 0 }]]
+    },
+    "Maak HTML redirect": {
+      "main": [[{ "node": "Redirect naar sessie", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

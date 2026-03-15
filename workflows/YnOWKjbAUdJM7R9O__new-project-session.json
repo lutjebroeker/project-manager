@@ -1,0 +1,172 @@
+{
+  "id": "YnOWKjbAUdJM7R9O",
+  "name": "New Project Session",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "createdAt": "2026-03-14T08:40:32.761Z",
+  "updatedAt": "2026-03-14T08:40:38.306Z",
+  "tags": [],
+  "nodes": [
+    {
+      "id": "wh-np-01",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-400, 0],
+      "parameters": {
+        "path": "new-project",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "http-np-01",
+      "name": "Maak GitHub repo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-180, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.github.com/user/repos",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "token {{GITHUB_PAT}}"
+            },
+            {
+              "name": "Accept",
+              "value": "application/vnd.github.v3+json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "body": {
+          "name": "={{ $('Webhook').item.json.query.name }}",
+          "private": true,
+          "auto_init": true
+        }
+      }
+    },
+    {
+      "id": "ssh-np-01",
+      "name": "Clone repo",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [40, 0],
+      "parameters": {
+        "command": "=git clone https://{{GITHUB_PAT}}@github.com/lutjebroeker/{{ $('Webhook').item.json.query.name }}.git /root/projects/{{ $('Webhook').item.json.query.name }} && echo 'done'"
+      },
+      "credentials": {
+        "sshPassword": {
+          "id": "OdKR4WxKZwBUMzZ5",
+          "name": "SSH Claude Code"
+        }
+      }
+    },
+    {
+      "id": "ssh-np-02",
+      "name": "Start Remote Control",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [260, 0],
+      "parameters": {
+        "command": "=rm -f /tmp/claude-rc-{{ $('Webhook').item.json.query.name }}.txt && tmux kill-session -t {{ $('Webhook').item.json.query.name }} 2>/dev/null; tmux new-session -d -s {{ $('Webhook').item.json.query.name }} -n claude -c /root/projects/{{ $('Webhook').item.json.query.name }} && tmux new-window -t {{ $('Webhook').item.json.query.name }} -n shell -c /root/projects/{{ $('Webhook').item.json.query.name }} && tmux new-window -t {{ $('Webhook').item.json.query.name }} -n git -c /root/projects/{{ $('Webhook').item.json.query.name }} && tmux send-keys -t {{ $('Webhook').item.json.query.name }}:claude 'claude remote-control --name \"{{ $('Webhook').item.json.query.name }}\" > /tmp/claude-rc-{{ $('Webhook').item.json.query.name }}.txt 2>&1' Enter && echo 'started'"
+      },
+      "credentials": {
+        "sshPassword": {
+          "id": "OdKR4WxKZwBUMzZ5",
+          "name": "SSH Claude Code"
+        }
+      }
+    },
+    {
+      "id": "wait-np-01",
+      "name": "Wacht op URL",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [480, 0],
+      "parameters": {
+        "amount": 2
+      }
+    },
+    {
+      "id": "ssh-np-03",
+      "name": "Haal Remote URL op",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [700, 0],
+      "parameters": {
+        "command": "=for i in $(seq 1 12); do\n  url=$(grep -o 'https://claude\\.ai/code[^ ]*' /tmp/claude-rc-{{ $('Webhook').item.json.query.name }}.txt 2>/dev/null | tail -1)\n  [ -n \"$url\" ] && echo \"$url\" && break\n  sleep 5\ndone"
+      },
+      "credentials": {
+        "sshPassword": {
+          "id": "OdKR4WxKZwBUMzZ5",
+          "name": "SSH Claude Code"
+        }
+      }
+    },
+    {
+      "id": "code-np-01",
+      "name": "Maak HTML redirect",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [920, 0],
+      "parameters": {
+        "jsCode": "const name = $('Webhook').item.json.query.name;\nconst url = $input.first().json.stdout.trim();\nif (!url) {\n  return [{ json: { html: `<html><body><h2>Project '${name}' aangemaakt maar geen Claude URL gevonden.</h2><p>Ga naar de project note en klik Start sessie.</p></body></html>` } }];\n}\nreturn [{ json: { html: `<html><head><meta http-equiv=\"refresh\" content=\"0; url=${url}\"></head><body>Verbinding maken met Claude...</body></html>` } }];"
+      }
+    },
+    {
+      "id": "resp-np-01",
+      "name": "Redirect naar sessie",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [1140, 0],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "="{{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Maak GitHub repo", "type": "main", "index": 0 }]]
+    },
+    "Maak GitHub repo": {
+      "main": [[{ "node": "Clone repo", "type": "main", "index": 0 }]]
+    },
+    "Clone repo": {
+      "main": [[{ "node": "Start Remote Control", "type": "main", "index": 0 }]]
+    },
+    "Start Remote Control": {
+      "main": [[{ "node": "Wacht op URL", "type": "main", "index": 0 }]]
+    },
+    "Wacht op URL": {
+      "main": [[{ "node": "Haal Remote URL op", "type": "main", "index": 0 }]]
+    },
+    "Haal Remote URL op": {
+      "main": [[{ "node": "Maak HTML redirect", "type": "main", "index": 0 }]]
+    },
+    "Maak HTML redirect": {
+      "main": [[{ "node": "Redirect naar sessie", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  }
+}

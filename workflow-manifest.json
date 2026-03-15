@@ -1,0 +1,29 @@
+{
+  "workflows": [
+    {
+      "id": "O75vuWXjLj_4hAsuWPFji",
+      "name": "Start Project Session",
+      "file": "workflows/O75vuWXjLj__start-project-session.json",
+      "active": true,
+      "webhook": "/webhook/start-project?session=X&folder=Y&mode=normal|dangerous",
+      "updatedAt": "2026-03-14T08:09:55.069Z"
+    },
+    {
+      "id": "GfmBMQOHUdegYA1o",
+      "name": "Stop Project Session",
+      "file": "workflows/GfmBMQOHUdegYA1o__stop-project-session.json",
+      "active": true,
+      "webhook": "/webhook/stop-project?session=X",
+      "updatedAt": "2026-03-14T08:04:29.514Z"
+    },
+    {
+      "id": "YnOWKjbAUdJM7R9O",
+      "name": "New Project Session",
+      "file": "workflows/YnOWKjbAUdJM7R9O__new-project-session.json",
+      "active": true,
+      "webhook": "/webhook/new-project?name=X",
+      "updatedAt": "2026-03-14T08:40:38.306Z",
+      "notes": "GitHub PAT is vervangen door {{GITHUB_PAT}} placeholder. Vul in n8n zelf in."
+    }
+  ]
+}
