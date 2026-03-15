@@ -3,1018 +3,2092 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Projects</title>
+  <title>Claude Projects</title>
   <style>
+    :root {
+      --bg:            #0a0a0a;
+      --bg-surface:    #111111;
+      --bg-elevated:   #161616;
+      --bg-input:      #0d0d0d;
+      --border:        #1e1e1e;
+      --border-focus:  #3a3a3a;
+      --text:          #e8e8e8;
+      --text-2:        #888888;
+      --text-3:        #555555;
+      --text-4:        #333333;
+      --accent:        #5b6af0;
+      --accent-dim:    #1a1d4a;
+      --green:         #4caf50;
+      --green-dim:     #1a3a1a;
+      --green-border:  #2d5a2d;
+      --red:           #f44336;
+      --red-dim:       #3a1a1a;
+      --red-border:    #5a2d2d;
+      --blue:          #7c9fef;
+      --blue-dim:      #1a1a3a;
+      --blue-border:   #2d3d6a;
+      --orange:        #ff9800;
+      --orange-dim:    #3a2a1a;
+      --orange-border: #5a3d1a;
+      --purple:        #9c6fef;
+      --purple-dim:    #2a1a4a;
+      --mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      --radius-sm: 4px;
+      --radius:    8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --sidebar-w: 220px;
+      --topbar-h:  56px;
+      --shadow:    0 4px 24px rgba(0,0,0,0.6);
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #0a0a0a;
-      color: #e8e8e8;
+      background: var(--bg);
+      color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      min-height: 100vh;
-      padding: 40px 24px;
-    }
-
-    /* Nav */
-    nav {
+      height: 100vh;
+      overflow: hidden;
       display: flex;
-      gap: 4px;
-      margin-bottom: 40px;
-      max-width: 720px;
     }
 
-    .nav-tab {
-      background: none;
-      border: none;
-      border-radius: 6px;
-      color: #444;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      padding: 6px 14px;
-      text-transform: uppercase;
-      transition: color 0.15s, background 0.15s;
-    }
-
-    .nav-tab:hover { color: #888; }
-    .nav-tab.active { background: #1a1a1a; color: #e8e8e8; }
-
-    /* Views */
-    .view { display: none; }
-    .view.active { display: block; }
-
-    /* Projects view */
-    .new-project {
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border);
       display: flex;
+      flex-direction: column;
+      height: 100vh;
+      transition: width 0.2s, min-width 0.2s;
+      overflow: hidden;
+    }
+
+    .sidebar.collapsed { width: 56px; min-width: 56px; }
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
       gap: 10px;
-      margin-bottom: 48px;
-      max-width: 480px;
+      padding: 0 16px;
+      height: var(--topbar-h);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
     }
 
-    .new-project input {
-      flex: 1;
-      background: #141414;
-      border: 1px solid #222;
-      border-radius: 8px;
-      color: #e8e8e8;
-      font-size: 0.95rem;
-      padding: 10px 14px;
-      outline: none;
-      transition: border-color 0.15s;
+    .brand-icon {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+      color: white;
+      font-weight: 700;
     }
 
-    .new-project input:focus { border-color: #444; }
-    .new-project input::placeholder { color: #444; }
+    .brand-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+    }
 
-    .btn {
-      border: none;
-      border-radius: 8px;
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 12px 8px;
+      flex-shrink: 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: var(--radius);
       cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-3);
       font-size: 0.85rem;
       font-weight: 500;
-      padding: 10px 16px;
-      transition: opacity 0.15s;
+      text-align: left;
+      white-space: nowrap;
+      transition: background 0.12s, color 0.12s;
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .nav-item:hover { background: var(--border); color: var(--text-2); }
+    .nav-item.active { background: var(--accent-dim); color: var(--accent); }
+
+    .nav-icon {
+      font-size: 15px;
+      width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .nav-label { overflow: hidden; }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 8px;
+      flex-shrink: 0;
+    }
+
+    /* Activity log */
+    .sidebar-log {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      padding: 0 8px 8px;
+      min-height: 0;
+    }
+
+    .log-header {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-4);
+      padding: 8px 10px 6px;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+
+    .log-entries {
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .log-entries::-webkit-scrollbar { width: 3px; }
+    .log-entries::-webkit-scrollbar-track { background: transparent; }
+    .log-entries::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .log-entry {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .log-icon { font-size: 11px; flex-shrink: 0; margin-top: 1px; }
+
+    .log-text {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .log-project {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: var(--text-2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .log-action {
+      font-size: 0.68rem;
+      color: var(--text-4);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .log-time {
+      font-size: 0.65rem;
+      color: var(--text-4);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .log-empty {
+      font-size: 0.75rem;
+      color: var(--text-4);
+      padding: 8px 10px;
       white-space: nowrap;
     }
 
-    .btn:hover { opacity: 0.8; }
-    .btn:disabled { opacity: 0.4; cursor: default; }
+    /* Sidebar bottom */
+    .sidebar-bottom {
+      padding: 8px;
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      display: flex;
+      gap: 4px;
+    }
 
-    .btn-create { background: #1a1a1a; color: #e8e8e8; border: 1px solid #333; }
-    .btn-start  { background: #1a3a1a; color: #4caf50; border: 1px solid #2d5a2d; }
-    .btn-stop   { background: #3a1a1a; color: #f44336; border: 1px solid #5a2d2d; }
-    .btn-reset  { background: #1a1a3a; color: #7c9fef; border: 1px solid #2d3d6a; }
-    .btn-danger { background: #3a2a1a; color: #ff9800; border: 1px solid #5a3d1a; }
-    .btn-task   { background: #1a1a1a; color: #888; border: 1px solid #2a2a2a; font-size: 0.8rem; padding: 8px 12px; }
-    .btn-task:hover { color: #aaa; }
+    .sidebar-icon-btn {
+      width: 36px; height: 36px;
+      border-radius: var(--radius);
+      border: none;
+      background: none;
+      color: var(--text-4);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      transition: background 0.12s, color 0.12s;
+      flex-shrink: 0;
+    }
+
+    .sidebar-icon-btn:hover { background: var(--border); color: var(--text-2); }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .topbar {
+      height: var(--topbar-h);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .page-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+    .kbd-hint {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.72rem;
+      color: var(--text-4);
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      transition: border-color 0.12s, color 0.12s;
+      background: none;
+    }
+
+    .kbd-hint:hover { border-color: var(--border-focus); color: var(--text-3); }
+
+    /* ── CONTENT ── */
+    .content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 28px 24px;
+    }
+
+    .content::-webkit-scrollbar { width: 6px; }
+    .content::-webkit-scrollbar-track { background: transparent; }
+    .content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* ── BUTTONS ── */
+    .btn {
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 7px 13px;
+      transition: opacity 0.12s, background 0.12s;
+      white-space: nowrap;
+      border: 1px solid transparent;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn:hover { opacity: 0.82; }
+    .btn:disabled { opacity: 0.35; cursor: default; }
+
+    .btn-primary  { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-ghost    { background: var(--bg-surface); color: var(--text-2); border-color: var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--border-focus); opacity: 1; }
+    .btn-start    { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+    .btn-stop     { background: var(--red-dim);   color: var(--red);   border-color: var(--red-border); }
+    .btn-reset    { background: var(--blue-dim);  color: var(--blue);  border-color: var(--blue-border); }
+    .btn-danger   { background: var(--orange-dim);color: var(--orange);border-color: var(--orange-border); }
+    .btn-restart  { background: var(--purple-dim);color: var(--purple);border-color: #4a2d6a; }
+    .btn-analyse  { background: #1a2a3a; color: var(--blue); border-color: var(--blue-border); }
+    .btn-build    { background: var(--green-dim); color: var(--green); border-color: var(--green-border); }
+    .btn-sm       { font-size: 0.75rem; padding: 5px 10px; }
+    .btn-icon     { padding: 6px 8px; font-size: 14px; }
+    .btn-danger-solid { background: var(--red); color: white; border-color: var(--red); }
+    .btn-danger-solid:hover { background: #d32f2f; opacity: 1; }
+
+    /* ── PROJECT CARDS ── */
+    .projects-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .projects-count {
+      font-size: 0.78rem;
+      color: var(--text-3);
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 9px;
+    }
+
+    .projects-grid { display: flex; flex-direction: column; gap: 10px; max-width: 860px; }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+
+    .card:hover { border-color: #2a2a2a; }
+
+    .card-main {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--text-4);
+      transition: background 0.2s;
+    }
+
+    .status-dot.active   { background: var(--green); box-shadow: 0 0 6px var(--green); animation: pulse 2s infinite; }
+    .status-dot.stopped  { background: var(--text-4); box-shadow: none; animation: none; }
+    .status-dot.unknown  { background: var(--orange); box-shadow: none; }
+    .status-dot.connecting { background: var(--accent); box-shadow: 0 0 6px var(--accent); animation: pulse 0.8s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .card-info { flex: 1; min-width: 0; }
+
+    .card-name-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .card-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .card-timer {
+      font-size: 0.7rem;
+      color: var(--green);
+      background: var(--green-dim);
+      border: 1px solid var(--green-border);
+      border-radius: 20px;
+      padding: 1px 7px;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: var(--text-3);
+      flex-wrap: wrap;
+    }
+
+    .card-meta a { color: var(--text-3); text-decoration: none; }
+    .card-meta a:hover { color: var(--text-2); }
+
+    .card-folder {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--text-4);
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      transition: background 0.12s, color 0.12s;
+      border: 1px solid transparent;
+    }
+
+    .card-folder:hover { background: var(--border); color: var(--text-3); border-color: var(--border); }
+
+    .card-actions { display: flex; gap: 6px; flex-shrink: 0; align-items: center; }
+
+    .card-menu-btn {
+      width: 28px; height: 28px;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      background: none;
+      color: var(--text-4);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      line-height: 1;
+    }
+
+    .card-menu-btn:hover { background: var(--border); color: var(--text-2); border-color: var(--border); }
+
+    /* Card secondary row: task + obsidian actions */
+    .card-secondary {
+      border-top: 1px solid var(--border);
+      padding: 10px 20px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      background: #0e0e0e;
+    }
 
     /* Task input row */
     .task-row {
       display: none;
-      padding: 12px 24px 16px;
-      border-top: 1px solid #1a1a1a;
+      padding: 10px 20px 14px;
+      border-top: 1px solid var(--border);
       gap: 8px;
       align-items: center;
+      background: #0c0c0c;
     }
 
     .task-row.open { display: flex; }
 
     .task-row input {
       flex: 1;
-      background: #0d0d0d;
-      border: 1px solid #222;
-      border-radius: 6px;
-      color: #e8e8e8;
-      font-size: 0.88rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 0.85rem;
       padding: 8px 12px;
       outline: none;
       transition: border-color 0.15s;
+      font-family: inherit;
     }
 
-    .task-row input:focus { border-color: #3a3a3a; }
-    .task-row input::placeholder { color: #333; }
+    .task-row input:focus { border-color: var(--border-focus); }
+    .task-row input::placeholder { color: var(--text-4); }
 
-    .btn-add-task {
-      background: #1a2a1a;
-      border: 1px solid #2d4a2d;
-      border-radius: 6px;
-      color: #4caf50;
-      cursor: pointer;
-      font-size: 0.8rem;
-      font-weight: 500;
-      padding: 8px 14px;
+    .task-hint {
+      font-size: 0.7rem;
+      color: var(--text-4);
       white-space: nowrap;
-      transition: opacity 0.15s;
     }
 
-    .btn-add-task:hover { opacity: 0.8; }
-
-    /* Adjust card for task row */
-    .card {
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      display: flex;
       flex-direction: column;
-      padding: 0;
-      overflow: hidden;
-    }
-
-    .card-main {
-      display: flex;
       align-items: center;
-      gap: 16px;
-      padding: 20px 24px;
-    }
-
-    .projects { display: grid; gap: 12px; max-width: 720px; }
-
-    .card {
-      background: #111;
-      border: 1px solid #1e1e1e;
-      border-radius: 12px;
-      padding: 20px 24px;
-      display: flex;
-      align-items: center;
+      justify-content: center;
+      padding: 80px 24px;
+      text-align: center;
       gap: 16px;
     }
 
-    .card-info { flex: 1; }
-
-    .card-name {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 4px;
+    .empty-icon {
+      width: 56px; height: 56px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
     }
 
-    .card-meta {
-      font-size: 0.78rem;
-      color: #555;
-    }
+    .empty-title { font-size: 1rem; font-weight: 600; }
+    .empty-sub { font-size: 0.85rem; color: var(--text-3); max-width: 300px; line-height: 1.5; }
 
-    .card-meta a { color: #555; text-decoration: none; }
-    .card-meta a:hover { color: #888; }
-
-    .card-actions { display: flex; gap: 8px; flex-shrink: 0; }
-
-    /* Docs view */
-    .docs { max-width: 720px; }
-
-    .docs-section {
-      margin-bottom: 48px;
-    }
-
-    .docs-section h2 {
-      color: #666;
-      font-size: 0.75rem;
-      font-weight: 500;
-      letter-spacing: 0.08em;
-      margin-bottom: 16px;
-      text-transform: uppercase;
-    }
-
-    .docs-section p {
-      color: #aaa;
-      font-size: 0.9rem;
-      line-height: 1.6;
-      margin-bottom: 12px;
-    }
-
-    .docs-section p:last-child { margin-bottom: 0; }
-
-    /* Flow steps */
-    .flow {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-    }
-
-    .flow-step {
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-    }
-
-    .flow-line {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex-shrink: 0;
-    }
-
-    .flow-dot {
-      width: 8px;
-      height: 8px;
-      background: #333;
-      border-radius: 50%;
-      margin-top: 5px;
-      flex-shrink: 0;
-    }
-
-    .flow-connector {
-      width: 1px;
-      flex: 1;
-      min-height: 20px;
-      background: #1e1e1e;
-      margin: 4px 0;
-    }
-
-    .flow-step:last-child .flow-connector { display: none; }
-
-    .flow-content {
-      padding-bottom: 20px;
-    }
-
-    .flow-content strong {
-      font-size: 0.9rem;
-      font-weight: 600;
-      display: block;
-      margin-bottom: 2px;
-    }
-
-    .flow-content span {
-      font-size: 0.8rem;
-      color: #555;
-    }
-
-    /* Links grid */
-    .links-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 10px;
-    }
-
-    .link-card {
-      background: #111;
-      border: 1px solid #1e1e1e;
-      border-radius: 10px;
-      padding: 14px 16px;
-      text-decoration: none;
-      transition: border-color 0.15s;
-      display: block;
-    }
-
-    .link-card:hover { border-color: #333; }
-
-    .link-card-label {
-      font-size: 0.7rem;
-      color: #444;
-      letter-spacing: 0.06em;
-      margin-bottom: 4px;
-      text-transform: uppercase;
-    }
-
-    .link-card-name {
-      font-size: 0.9rem;
-      color: #e8e8e8;
-      font-weight: 500;
-    }
-
-    /* Workflow table */
-    .wf-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .wf-card {
-      background: #111;
-      border: 1px solid #1e1e1e;
-      border-radius: 10px;
-      padding: 16px 20px;
-    }
-
-    .wf-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .wf-name {
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-
-    .wf-badge {
-      font-size: 0.7rem;
-      padding: 2px 7px;
-      border-radius: 4px;
-      background: #1a3a1a;
-      color: #4caf50;
-    }
-
-    .wf-webhook {
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 0.78rem;
-      color: #555;
-      margin-bottom: 6px;
-      word-break: break-all;
-    }
-
-    .wf-desc {
-      font-size: 0.8rem;
-      color: #444;
-      line-height: 1.5;
-    }
-
-    /* Code block */
-    .code-block {
-      background: #111;
-      border: 1px solid #1e1e1e;
-      border-radius: 10px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 0.8rem;
-      color: #888;
-      padding: 16px 20px;
-      line-height: 1.7;
-      white-space: pre;
-      overflow-x: auto;
-    }
-
-    /* Todo */
-    .todo-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .todo-item {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.88rem;
-      color: #666;
-    }
-
-    .todo-item::before {
-      content: '';
-      width: 14px;
-      height: 14px;
-      border: 1px solid #2a2a2a;
-      border-radius: 3px;
-      flex-shrink: 0;
-    }
-
-    /* Toast */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: #1e1e1e;
-      border: 1px solid #333;
-      border-radius: 8px;
-      color: #e8e8e8;
-      font-size: 0.85rem;
-      padding: 12px 18px;
+    /* ── SLIDE-IN PANEL ── */
+    .panel-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s;
     }
 
-    .toast.show { opacity: 1; }
+    .panel-overlay.open { opacity: 1; pointer-events: all; }
+
+    .panel {
+      position: fixed;
+      top: 0; right: 0; bottom: 0;
+      width: 380px;
+      background: var(--bg-elevated);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.22s cubic-bezier(0.4,0,0.2,1);
+      z-index: 201;
+      box-shadow: var(--shadow);
+    }
+
+    .panel.open { transform: translateX(0); }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: var(--topbar-h);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .panel-title { font-size: 0.9rem; font-weight: 600; }
+
+    .panel-close {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: none;
+      color: var(--text-3);
+      cursor: pointer;
+      font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.12s, color 0.12s;
+    }
+
+    .panel-close:hover { background: var(--border); color: var(--text); }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-shrink: 0;
+    }
+
+    .field { display: flex; flex-direction: column; gap: 6px; }
+
+    .field label {
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .field-optional {
+      font-size: 0.68rem;
+      color: var(--text-4);
+      font-weight: 400;
+    }
+
+    .field input, .field select {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      font-size: 0.85rem;
+      padding: 9px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+      width: 100%;
+    }
+
+    .field input:focus, .field select:focus { border-color: var(--border-focus); }
+    .field input::placeholder { color: var(--text-4); }
+    .field input.invalid { border-color: var(--red); }
+
+    .field select { cursor: pointer; }
+    .field select option { background: var(--bg-elevated); }
+
+    .field-hint {
+      font-size: 0.72rem;
+      color: var(--text-4);
+    }
+
+    /* ── CONFIRM DIALOG ── */
+    .dialog-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 300;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+
+    .dialog-overlay.open { opacity: 1; pointer-events: all; }
+
+    .dialog {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      max-width: 360px;
+      width: calc(100vw - 48px);
+      box-shadow: var(--shadow);
+      transform: scale(0.95);
+      transition: transform 0.15s;
+    }
+
+    .dialog-overlay.open .dialog { transform: scale(1); }
+
+    .dialog-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; }
+    .dialog-msg { font-size: 0.85rem; color: var(--text-3); line-height: 1.5; margin-bottom: 20px; }
+
+    .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* ── COMMAND PALETTE ── */
+    .palette-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 400;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 15vh;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+
+    .palette-overlay.open { opacity: 1; pointer-events: all; }
+
+    .palette {
+      width: 560px;
+      max-width: calc(100vw - 32px);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-focus);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transform: translateY(-8px);
+      transition: transform 0.15s;
+    }
+
+    .palette-overlay.open .palette { transform: translateY(0); }
+
+    .palette-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .palette-input-wrap svg { color: var(--text-3); flex-shrink: 0; }
+
+    .palette-input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .palette-input::placeholder { color: var(--text-4); }
+
+    .palette-esc {
+      font-size: 0.68rem;
+      color: var(--text-4);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 2px 6px;
+      flex-shrink: 0;
+    }
+
+    .palette-results {
+      max-height: 380px;
+      overflow-y: auto;
+      padding: 6px;
+    }
+
+    .palette-results::-webkit-scrollbar { width: 4px; }
+    .palette-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    .palette-group-label {
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-4);
+      padding: 8px 10px 4px;
+    }
+
+    .palette-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+
+    .palette-item:hover, .palette-item.selected { background: var(--border); }
+
+    .palette-item-icon {
+      width: 28px; height: 28px;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+      background: var(--bg-surface);
+    }
+
+    .palette-item-text { flex: 1; min-width: 0; }
+
+    .palette-item-label {
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    .palette-item-sub {
+      font-size: 0.72rem;
+      color: var(--text-3);
+    }
+
+    .palette-empty {
+      padding: 32px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--text-4);
+    }
+
+    /* ── SETTINGS PANEL ── */
+    .settings-section { margin-bottom: 24px; }
+
+    .settings-section h3 {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-4);
+      margin-bottom: 12px;
+    }
+
+    /* ── TOAST ── */
+    .toast-stack {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 8px;
+      z-index: 500;
+      pointer-events: none;
+    }
+
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 0.83rem;
+      max-width: 320px;
+      pointer-events: all;
+      transform: translateX(20px);
+      opacity: 0;
+      transition: transform 0.2s, opacity 0.2s;
+      box-shadow: var(--shadow);
+    }
+
+    .toast.show { transform: translateX(0); opacity: 1; }
+
+    .toast-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .toast.success .toast-dot { background: var(--green); }
+    .toast.error   .toast-dot { background: var(--red); }
+    .toast.info    .toast-dot { background: var(--accent); }
+    .toast.warning .toast-dot { background: var(--orange); }
+
+    .toast-msg { flex: 1; color: var(--text); }
+    .toast-close {
+      background: none; border: none; color: var(--text-4); cursor: pointer;
+      font-size: 15px; padding: 0 2px; line-height: 1;
+    }
+    .toast-close:hover { color: var(--text-2); }
+
+    /* ── CONTEXT MENU ── */
+    .ctx-menu {
+      position: fixed;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 4px;
+      z-index: 600;
+      min-width: 160px;
+      box-shadow: var(--shadow);
+      display: none;
+    }
+
+    .ctx-menu.open { display: block; }
+
+    .ctx-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.83rem;
+      color: var(--text-2);
+      transition: background 0.1s;
+    }
+
+    .ctx-item:hover { background: var(--border); color: var(--text); }
+    .ctx-item.danger { color: var(--red); }
+    .ctx-item.danger:hover { background: var(--red-dim); }
+
+    .ctx-sep { height: 1px; background: var(--border); margin: 3px 0; }
+
+    /* ── DOCS / HANDLEIDING / FAQ ── */
+    .docs-wrap { max-width: 740px; }
+
+    .docs-section { margin-bottom: 44px; }
+
+    .docs-section h2 {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .docs-section p {
+      font-size: 0.875rem;
+      color: #aaa;
+      line-height: 1.6;
+      margin-bottom: 10px;
+    }
+
+    .docs-section p:last-child { margin-bottom: 0; }
+    .docs-section code { font-family: var(--mono); font-size: 0.8em; color: var(--blue); background: var(--bg-surface); padding: 1px 5px; border-radius: 3px; }
+
+    .flow { display: flex; flex-direction: column; }
+
+    .flow-step { display: flex; gap: 14px; align-items: flex-start; }
+
+    .flow-line { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; }
+
+    .flow-dot { width: 7px; height: 7px; background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+
+    .flow-connector { width: 1px; flex: 1; min-height: 18px; background: var(--border); margin: 3px 0; }
+
+    .flow-step:last-child .flow-connector { display: none; }
+
+    .flow-content { padding-bottom: 18px; }
+
+    .flow-content strong { font-size: 0.875rem; font-weight: 600; display: block; margin-bottom: 2px; }
+
+    .flow-content span { font-size: 0.78rem; color: var(--text-3); }
+
+    .links-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+
+    .link-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      text-decoration: none;
+      display: block;
+      transition: border-color 0.12s;
+    }
+
+    .link-card:hover { border-color: #333; }
+    .link-card-label { font-size: 0.68rem; color: var(--text-4); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 3px; }
+    .link-card-name { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+
+    .wf-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .wf-card { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 18px; }
+
+    .wf-header { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+
+    .wf-name { font-size: 0.875rem; font-weight: 600; }
+
+    .wf-badge { font-size: 0.68rem; padding: 2px 7px; border-radius: var(--radius-sm); background: var(--green-dim); color: var(--green); }
+
+    .wf-webhook { font-family: var(--mono); font-size: 0.75rem; color: var(--text-3); margin-bottom: 4px; word-break: break-all; }
+
+    .wf-desc { font-size: 0.78rem; color: var(--text-4); line-height: 1.5; }
+
+    .code-block {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      color: var(--text-2);
+      padding: 14px 18px;
+      line-height: 1.7;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    .todo-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .todo-item { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--text-3); }
+
+    .todo-item::before { content: ''; width: 13px; height: 13px; border: 1px solid var(--border); border-radius: 3px; flex-shrink: 0; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .card-actions { flex-wrap: wrap; }
+    }
   </style>
 </head>
 <body>
 
-  <nav>
-    <button class="nav-tab active" onclick="showView('projects', this)">Projects</button>
-    <button class="nav-tab" onclick="showView('docs', this)">Docs</button>
-    <button class="nav-tab" onclick="showView('handleiding', this)">Handleiding</button>
-    <button class="nav-tab" onclick="showView('faq', this)">FAQ</button>
-  </nav>
-
-  <!-- PROJECTS VIEW -->
-  <div id="view-projects" class="view active">
-    <div class="new-project">
-      <input id="new-name" type="text" placeholder="project-naam" />
-      <button class="btn btn-create" onclick="newProject()">🔨 Nieuw project</button>
-    </div>
-    <div class="projects" id="projects"></div>
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">C</div>
+    <span class="brand-name">Claude Projects</span>
   </div>
 
-  <!-- DOCS VIEW -->
-  <div id="view-docs" class="view">
-    <div class="docs">
+  <nav class="sidebar-nav">
+    <button class="nav-item active" id="nav-projects" onclick="showView('projects', this)">
+      <span class="nav-icon">⊞</span><span class="nav-label">Projects</span>
+    </button>
+    <button class="nav-item" id="nav-docs" onclick="showView('docs', this)">
+      <span class="nav-icon">⎙</span><span class="nav-label">Docs</span>
+    </button>
+    <button class="nav-item" id="nav-handleiding" onclick="showView('handleiding', this)">
+      <span class="nav-icon">◎</span><span class="nav-label">Handleiding</span>
+    </button>
+    <button class="nav-item" id="nav-faq" onclick="showView('faq', this)">
+      <span class="nav-icon">?</span><span class="nav-label">FAQ</span>
+    </button>
+  </nav>
 
-      <div class="docs-section">
-        <h2>Hoe werkt het? — Sessie starten</h2>
-        <div class="flow">
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Klik Start sessie</strong>
-              <span>Vanuit deze site of Obsidian project note</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>n8n checkt bestaande sessie</strong>
-              <span>Als er al een claude.ai URL in de temp file staat → direct redirect</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>tmux sessie aanmaken of hergebruiken</strong>
-              <span>3 windows: claude / shell / git — in de project folder</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>claude remote-control starten</strong>
-              <span>Output → /tmp/claude-rc-{sessie}.txt op de server</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>URL pollen (max 60s)</strong>
-              <span>Elke 5 seconden checken of de claude.ai URL er al in staat</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div></div>
-            <div class="flow-content">
-              <strong>Browser redirect → claude.ai</strong>
-              <span>Direct in je project, zonder SSH</span>
-            </div>
+  <div class="sidebar-divider"></div>
+
+  <div class="sidebar-log">
+    <div class="log-header">Activiteit</div>
+    <div class="log-entries" id="log-entries">
+      <div class="log-empty">Nog geen activiteit</div>
+    </div>
+  </div>
+
+  <div class="sidebar-bottom">
+    <button class="sidebar-icon-btn" title="Instellingen" onclick="showView('settings', document.getElementById('nav-settings'))">⚙</button>
+    <button class="sidebar-icon-btn" title="Sidebar inklappen / uitklappen" onclick="toggleSidebar()">◁</button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <span class="page-title" id="page-title">Projects</span>
+    <div class="topbar-actions">
+      <button class="kbd-hint" onclick="openPalette()" title="Command palette">⌘K</button>
+      <button class="btn btn-ghost btn-sm" id="topbar-cta" onclick="openAddPanel()">+ Project</button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- PROJECTS VIEW -->
+    <div id="view-projects" class="view active">
+      <div class="projects-header">
+        <span class="projects-count" id="projects-count">0 projecten</span>
+      </div>
+      <div class="projects-grid" id="projects-grid"></div>
+    </div>
+
+    <!-- DOCS VIEW -->
+    <div id="view-docs" class="view">
+      <div class="docs-wrap">
+        <div class="docs-section">
+          <h2>Hoe werkt het? — Sessie starten</h2>
+          <div class="flow">
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Klik 🚀 Start bij een project</strong><span>Vanuit deze site of via de Obsidian project note</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>n8n checkt bestaande sessie</strong><span>Als er al een claude.ai URL in de temp file staat → direct redirect</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>tmux sessie aanmaken of hergebruiken</strong><span>3 windows: claude / shell / git — in de project folder</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>claude remote-control starten</strong><span>Output → /tmp/claude-rc-{sessie}.txt op de server</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>URL pollen (max 60s)</strong><span>Elke 5 seconden checken of de claude.ai URL er al in staat</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div></div><div class="flow-content"><strong>Browser redirect → claude.ai</strong><span>Direct in je project, zonder SSH</span></div></div>
           </div>
         </div>
-      </div>
 
-      <div class="docs-section">
-        <h2>Hoe werkt het? — Obsidian planbord</h2>
-        <div class="flow">
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Voeg todos toe in ## Backlog</strong>
-              <span>Gebruik <code>- [ ] beschrijving</code> in de Obsidian project note</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Klik ▶️ Analyseer taken</strong>
-              <span>n8n leest de backlog, stuurt naar Claude (claude -p), plan wordt teruggeschreven naar ## Plan in Obsidian</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Bekijk en bewerk het plan in Obsidian</strong>
-              <span>Claude schrijft concrete stappen per taak — pas aan naar behoefte</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div></div>
-            <div class="flow-content">
-              <strong>Klik ✅ Bevestig en bouw</strong>
-              <span>Plan wordt als TASK.md naar de server geschreven, nieuwe Claude Code sessie start, browser redirect naar claude.ai</span>
-            </div>
+        <div class="docs-section">
+          <h2>Hoe werkt het? — Obsidian planbord</h2>
+          <div class="flow">
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Voeg todos toe in ## Backlog</strong><span>Via de "+ Taak" knop op de site, of direct in Obsidian als <code>- [ ] beschrijving</code></span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Klik ▶️ Analyseer taken</strong><span>n8n leest de backlog, stuurt naar Claude (claude -p), plan wordt teruggeschreven naar ## Plan in Obsidian</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Bekijk en bewerk het plan in Obsidian</strong><span>Claude schrijft concrete stappen per taak — pas aan naar behoefte</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div></div><div class="flow-content"><strong>Klik ✅ Bevestig en bouw</strong><span>Plan wordt als TASK.md naar de server geschreven, nieuwe Claude Code sessie start, browser redirect naar claude.ai</span></div></div>
           </div>
         </div>
-      </div>
 
-      <div class="docs-section">
-        <h2>Workflows</h2>
-        <div class="wf-list">
-          <div class="wf-card">
-            <div class="wf-header">
-              <span class="wf-name">Start Project Session</span>
-              <span class="wf-badge">actief</span>
-            </div>
-            <div class="wf-webhook">/webhook/start-project?session=X&folder=Y&mode=normal|dangerous</div>
-            <div class="wf-desc">Herstart of start een sessie. <code>mode=dangerous</code> voegt <code>--dangerously-skip-permissions</code> toe.</div>
-          </div>
-          <div class="wf-card">
-            <div class="wf-header">
-              <span class="wf-name">Stop Project Session</span>
-              <span class="wf-badge">actief</span>
-            </div>
-            <div class="wf-webhook">/webhook/stop-project?session=X</div>
-            <div class="wf-desc">Kill tmux sessie en verwijdert de temp file.</div>
-          </div>
-          <div class="wf-card">
-            <div class="wf-header">
-              <span class="wf-name">Reset Project Session</span>
-              <span class="wf-badge">actief</span>
-            </div>
-            <div class="wf-webhook">/webhook/reset-project?session=X</div>
-            <div class="wf-desc">Kill tmux + verwijdert temp file + pkill remote-control processen. Gebruik als sessie niet meer reageert.</div>
-          </div>
-          <div class="wf-card">
-            <div class="wf-header">
-              <span class="wf-name">New Project Session</span>
-              <span class="wf-badge">actief</span>
-            </div>
-            <div class="wf-webhook">/webhook/new-project?name=X</div>
-            <div class="wf-desc">Maakt GitHub repo aan (private), clonet naar de server, start sessie.</div>
-          </div>
-          <div class="wf-card">
-            <div class="wf-header">
-              <span class="wf-name">Voeg Taak Toe</span>
-              <span class="wf-badge" style="background:#1a2a3a;color:#7c9fef">obsidian</span>
-            </div>
-            <div class="wf-webhook">/webhook/add-task?project=X&task=Y</div>
-            <div class="wf-desc">Voegt een <code>- [ ]</code> taak toe aan <code>## Backlog</code> in de Obsidian project note. Gebruikt vanuit de site via de "+ Taak" knop per project.</div>
-          </div>
-          <div class="wf-card">
-            <div class="wf-header">
-              <span class="wf-name">Analyseer Taken</span>
-              <span class="wf-badge" style="background:#1a2a3a;color:#7c9fef">obsidian</span>
-            </div>
-            <div class="wf-webhook">/webhook/analyse-tasks?project=X</div>
-            <div class="wf-desc">Leest <code>## Backlog</code> uit Obsidian note, analyseert todos via <code>claude -p</code>, schrijft plan terug naar <code>## Plan</code> sectie.</div>
-          </div>
-          <div class="wf-card">
-            <div class="wf-header">
-              <span class="wf-name">Bevestig en Bouw</span>
-              <span class="wf-badge" style="background:#1a2a3a;color:#7c9fef">obsidian</span>
-            </div>
-            <div class="wf-webhook">/webhook/build-task?project=X&folder=Y</div>
-            <div class="wf-desc">Leest <code>## Plan</code>, schrijft TASK.md naar projectfolder, start verse Claude Code sessie, redirect naar claude.ai.</div>
+        <div class="docs-section">
+          <h2>Workflows</h2>
+          <div class="wf-list">
+            <div class="wf-card"><div class="wf-header"><span class="wf-name">Start Project Session</span><span class="wf-badge">actief</span></div><div class="wf-webhook">/webhook/start-project?session=X&amp;folder=Y&amp;mode=normal|dangerous</div><div class="wf-desc">Herstart of start een sessie. <code>mode=dangerous</code> voegt <code>--dangerously-skip-permissions</code> toe.</div></div>
+            <div class="wf-card"><div class="wf-header"><span class="wf-name">Stop Project Session</span><span class="wf-badge">actief</span></div><div class="wf-webhook">/webhook/stop-project?session=X</div><div class="wf-desc">Kill tmux sessie en verwijdert de temp file.</div></div>
+            <div class="wf-card"><div class="wf-header"><span class="wf-name">Reset Project Session</span><span class="wf-badge">actief</span></div><div class="wf-webhook">/webhook/reset-project?session=X</div><div class="wf-desc">Kill tmux + verwijdert temp file + pkill remote-control processen. Gebruik als sessie niet meer reageert.</div></div>
+            <div class="wf-card"><div class="wf-header"><span class="wf-name">New Project Session</span><span class="wf-badge">actief</span></div><div class="wf-webhook">/webhook/new-project?name=X</div><div class="wf-desc">Maakt GitHub repo aan (private), clonet naar de server, start sessie.</div></div>
+            <div class="wf-card"><div class="wf-header"><span class="wf-name">Voeg Taak Toe</span><span class="wf-badge" style="background:#1a1d4a;color:#7c9fef">obsidian</span></div><div class="wf-webhook">/webhook/add-task?project=X&amp;task=Y</div><div class="wf-desc">Voegt een <code>- [ ]</code> taak toe aan <code>## Backlog</code> in de Obsidian project note.</div></div>
+            <div class="wf-card"><div class="wf-header"><span class="wf-name">Analyseer Taken</span><span class="wf-badge" style="background:#1a1d4a;color:#7c9fef">obsidian</span></div><div class="wf-webhook">/webhook/analyse-tasks?project=X</div><div class="wf-desc">Leest <code>## Backlog</code> uit Obsidian note, analyseert todos via <code>claude -p</code>, schrijft plan terug naar <code>## Plan</code>.</div></div>
+            <div class="wf-card"><div class="wf-header"><span class="wf-name">Bevestig en Bouw</span><span class="wf-badge" style="background:#1a1d4a;color:#7c9fef">obsidian</span></div><div class="wf-webhook">/webhook/build-task?project=X&amp;folder=Y</div><div class="wf-desc">Leest <code>## Plan</code>, schrijft TASK.md naar projectfolder, start verse Claude Code sessie, redirect naar claude.ai.</div></div>
           </div>
         </div>
-      </div>
 
-      <div class="docs-section">
-        <h2>Server</h2>
-        <div class="code-block">Host:          root@192.168.1.34
+        <div class="docs-section">
+          <h2>Server</h2>
+          <div class="code-block">Host:          root@192.168.1.34
 Projects root: /root/projects/{naam}
 Temp files:    /tmp/claude-rc-{sessie}.txt
 tmux windows:  claude  /  shell  /  git</div>
-      </div>
+        </div>
 
-      <div class="docs-section">
-        <h2>Project toevoegen aan deze site</h2>
-        <p>Open <code>index.html</code> en voeg een object toe aan de <code>projects</code> array:</p>
-        <div class="code-block">{
-  name:   'project-naam',          // ook de tmux sessie naam
-  label:  'Leesbare naam',
-  folder: '/root/projects/project-naam',
-  github: 'https://github.com/lutjebroeker/project-naam',  // optioneel
-  vercel: 'https://project.vercel.app',                    // optioneel
-}</div>
-      </div>
+        <div class="docs-section">
+          <h2>Links</h2>
+          <div class="links-grid">
+            <a class="link-card" href="https://github.com/lutjebroeker/project-manager" target="_blank"><div class="link-card-label">GitHub</div><div class="link-card-name">project-manager</div></a>
+            <a class="link-card" href="https://n8n.jellespek.nl" target="_blank"><div class="link-card-label">Automatisering</div><div class="link-card-name">n8n</div></a>
+            <a class="link-card" href="https://github.com/lutjebroeker/project-manager/issues" target="_blank"><div class="link-card-label">Bugs &amp; taken</div><div class="link-card-name">GitHub Issues</div></a>
+            <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/O75vuWXjLj__start-project-session.json" target="_blank"><div class="link-card-label">Workflow export</div><div class="link-card-name">Start Session</div></a>
+            <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/GfmBMQOHUdegYA1o__stop-project-session.json" target="_blank"><div class="link-card-label">Workflow export</div><div class="link-card-name">Stop Session</div></a>
+            <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/YnOWKjbAUdJM7R9O__new-project-session.json" target="_blank"><div class="link-card-label">Workflow export</div><div class="link-card-name">New Session</div></a>
+            <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/qYqZxOMNgbKCbeXT__voeg-taak-toe.json" target="_blank"><div class="link-card-label">Workflow export</div><div class="link-card-name">Voeg Taak Toe</div></a>
+            <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/xOXAVQQKh7EMWfOR__analyseer-taken.json" target="_blank"><div class="link-card-label">Workflow export</div><div class="link-card-name">Analyseer Taken</div></a>
+            <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/1OoH4BvDSbjWEOjt__bevestig-en-bouw.json" target="_blank"><div class="link-card-label">Workflow export</div><div class="link-card-name">Bevestig en Bouw</div></a>
+          </div>
+        </div>
 
-      <div class="docs-section">
-        <h2>Links</h2>
-        <div class="links-grid">
-          <a class="link-card" href="https://github.com/lutjebroeker/project-manager" target="_blank">
-            <div class="link-card-label">GitHub</div>
-            <div class="link-card-name">project-manager</div>
-          </a>
-          <a class="link-card" href="https://n8n.jellespek.nl" target="_blank">
-            <div class="link-card-label">Automatisering</div>
-            <div class="link-card-name">n8n</div>
-          </a>
-          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/issues" target="_blank">
-            <div class="link-card-label">Bugs & taken</div>
-            <div class="link-card-name">GitHub Issues</div>
-          </a>
-          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/O75vuWXjLj__start-project-session.json" target="_blank">
-            <div class="link-card-label">Workflow export</div>
-            <div class="link-card-name">Start Session</div>
-          </a>
-          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/GfmBMQOHUdegYA1o__stop-project-session.json" target="_blank">
-            <div class="link-card-label">Workflow export</div>
-            <div class="link-card-name">Stop Session</div>
-          </a>
-          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/YnOWKjbAUdJM7R9O__new-project-session.json" target="_blank">
-            <div class="link-card-label">Workflow export</div>
-            <div class="link-card-name">New Session</div>
-          </a>
-          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/qYqZxOMNgbKCbeXT__voeg-taak-toe.json" target="_blank">
-            <div class="link-card-label">Workflow export</div>
-            <div class="link-card-name">Voeg Taak Toe</div>
-          </a>
-          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/xOXAVQQKh7EMWfOR__analyseer-taken.json" target="_blank">
-            <div class="link-card-label">Workflow export</div>
-            <div class="link-card-name">Analyseer Taken</div>
-          </a>
-          <a class="link-card" href="https://github.com/lutjebroeker/project-manager/blob/main/workflows/1OoH4BvDSbjWEOjt__bevestig-en-bouw.json" target="_blank">
-            <div class="link-card-label">Workflow export</div>
-            <div class="link-card-name">Bevestig en Bouw</div>
-          </a>
+        <div class="docs-section">
+          <h2>Todo</h2>
+          <div class="todo-list">
+            <div class="todo-item">Cloudflare: CNAME projects → cname.vercel-dns.com</div>
+            <div class="todo-item">Vercel: domein projects.jellespek.nl toevoegen</div>
+            <div class="todo-item">Cloudflare Zero Trust Access instellen voor projects.jellespek.nl</div>
+            <div class="todo-item">SSH Debug Test workflow verwijderen in n8n</div>
+            <div class="todo-item">execution-engine en fit-journey migreren naar /root/projects/ flat structuur (optioneel)</div>
+          </div>
         </div>
       </div>
-
-      <div class="docs-section">
-        <h2>Todo</h2>
-        <div class="todo-list">
-          <div class="todo-item">Cloudflare: CNAME projects → cname.vercel-dns.com</div>
-          <div class="todo-item">Vercel: domein projects.jellespek.nl toevoegen</div>
-          <div class="todo-item">Cloudflare Zero Trust Access instellen voor projects.jellespek.nl</div>
-          <div class="todo-item">SSH Debug Test workflow verwijderen in n8n</div>
-          <div class="todo-item">execution-engine en fit-journey migreren naar /root/projects/ flat structuur (optioneel)</div>
-        </div>
-      </div>
-
     </div>
-  </div>
 
-  <!-- HANDLEIDING VIEW -->
-  <div id="view-handleiding" class="view">
-    <div class="docs">
+    <!-- HANDLEIDING VIEW -->
+    <div id="view-handleiding" class="view">
+      <div class="docs-wrap">
+        <div class="docs-section">
+          <h2>Bestaand project starten</h2>
+          <p><strong>Vanuit de site:</strong> klik 🚀 Start bij het project. De browser opent automatisch de claude.ai sessie (kan 10–60 seconden duren).</p>
+          <p><strong>Vanuit Obsidian:</strong> open de project note en klik de 🚀 Start sessie link. Zelfde flow.</p>
+          <p><strong>⚠️ Skip permissions:</strong> gebruik alleen als Claude om bevestiging vraagt bij elke actie en je dat wil overslaan. Voegt <code>--dangerously-skip-permissions</code> toe. Je kunt dit ook permanent instellen op de server: <code>~/.claude/settings.json</code> → <code>"defaultMode": "bypassPermissions"</code>.</p>
+        </div>
 
-      <div class="docs-section">
-        <h2>Bestaand project starten</h2>
-        <p><strong>Vanuit de site:</strong> klik 🚀 Start bij het project. De browser opent automatisch de claude.ai sessie (kan 10–60 seconden duren).</p>
-        <p><strong>Vanuit Obsidian:</strong> open de project note en klik de 🚀 Start sessie link. Zelfde flow.</p>
-        <p><strong>⚠️ Skip permissions:</strong> gebruik alleen als Claude om bevestiging vraagt bij elke actie en je dat wil overslaan. Voegt <code>--dangerously-skip-permissions</code> toe.</p>
-      </div>
-
-      <div class="docs-section">
-        <h2>Nieuw project aanmaken</h2>
-        <div class="flow">
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Typ een project naam</strong>
-              <span>Gebruik alleen kleine letters en koppeltekens, bijv. <code>mijn-project</code></span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Klik 🔨 Nieuw project</strong>
-              <span>n8n maakt een private GitHub repo aan onder <code>lutjebroeker/{naam}</code></span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Repo wordt gekloond op de server</strong>
-              <span>Naar <code>/root/projects/{naam}</code></span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Sessie start automatisch</strong>
-              <span>Browser redirect naar claude.ai — direct in het nieuwe project</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div></div>
-            <div class="flow-content">
-              <strong>Voeg project toe aan de site</strong>
-              <span>Handmatige stap: voeg het toe aan <code>projects[]</code> in <code>index.html</code> en push</span>
-            </div>
+        <div class="docs-section">
+          <h2>Nieuw project aanmaken</h2>
+          <div class="flow">
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Klik "+ Project" rechtsboven</strong><span>Een panel schuift open vanuit de rechterkant</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Vul de naam in</strong><span>Label is de leesbare naam, Name is de slug (alleen kleine letters en koppeltekens) — wordt gebruikt als tmux sessie naam en GitHub repo</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Kies de folder op de server</strong><span>Bijv. <code>/root/projects/mijn-project</code></span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Sla op → project verschijnt in de lijst</strong><span>Wordt opgeslagen in localStorage — blijft bewaard na reload</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div></div><div class="flow-content"><strong>Klik 🔨 Maak aan om de GitHub repo + sessie te starten</strong><span>n8n maakt een private repo aan, kloont naar de server en start direct een sessie</span></div></div>
           </div>
         </div>
-      </div>
 
-      <div class="docs-section">
-        <h2>Project toevoegen aan de site</h2>
-        <p>Open <code>index.html</code> lokaal en voeg een object toe aan de <code>projects</code> array (rond regel 270):</p>
-        <div class="code-block">{
-  name:   'project-naam',
-  label:  'Leesbare naam',
-  folder: '/root/projects/project-naam',
-  github: 'https://github.com/lutjebroeker/project-naam',
-  vercel: 'https://project.vercel.app',  // weglaten als niet van toepassing
-}</div>
-        <p>Commit en push → Vercel deployt automatisch.</p>
-      </div>
+        <div class="docs-section">
+          <h2>Taken toevoegen via de site</h2>
+          <div class="flow">
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Klik "+ Taak" bij een project</strong><span>Een invoerveld klapt open onder de project card</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Typ de taakbeschrijving</strong><span>Omschrijf wat er gebouwd moet worden — één taak per keer</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div></div><div class="flow-content"><strong>Druk Enter of klik Toevoegen</strong><span>n8n schrijft <code>- [ ] taak</code> direct naar <code>## Backlog</code> in de Obsidian project note. Escape sluit het veld.</span></div></div>
+          </div>
+          <p style="margin-top:12px"><strong>Daarna:</strong> klik ▶️ Analyseer voor het plan, dan ✅ Bouw om de sessie te starten.</p>
+        </div>
 
-      <div class="docs-section">
-        <h2>Taken toevoegen via de site</h2>
-        <div class="flow">
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Klik "+ Taak" bij een project</strong>
-              <span>Een invoerveld klapt open onder de project card</span>
-            </div>
+        <div class="docs-section">
+          <h2>Taken plannen en bouwen via Obsidian</h2>
+          <div class="flow">
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Open de project note in Obsidian</strong><span>Sla op in <code>11. Projects/02. Active/{project-naam}.md</code></span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Voeg taken toe in ## Backlog</strong><span>Elk item als <code>- [ ] wat er gebouwd moet worden</code></span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Klik ▶️ Analyseer taken</strong><span>Opent in nieuw tabblad (~30s). Claude analyseert en schrijft plan naar ## Plan.</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Bekijk het plan in Obsidian</strong><span>Pas eventueel aan. Het plan bevat concrete stappen per taak.</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div></div><div class="flow-content"><strong>Klik ✅ Bevestig en bouw</strong><span>Plan wordt als TASK.md naar de server geschreven, Claude Code sessie start, browser redirect naar claude.ai</span></div></div>
           </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Typ de taakbeschrijving</strong>
-              <span>Omschrijf wat er gebouwd moet worden — één taak per keer</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div></div>
-            <div class="flow-content">
-              <strong>Druk Enter of klik Toevoegen</strong>
-              <span>n8n schrijft <code>- [ ] taak</code> direct naar <code>## Backlog</code> in de Obsidian project note. Escape sluit het veld zonder op te slaan.</span>
-            </div>
+          <p style="margin-top:12px"><strong>Let op:</strong> de SSH credentials voor de Obsidian workflows moeten ingesteld zijn in n8n. Zie <em>Workflow importeren</em> hieronder.</p>
+        </div>
+
+        <div class="docs-section">
+          <h2>Project note aanmaken in Obsidian</h2>
+          <div class="flow">
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Nieuwe note aanmaken via template</strong><span>Gebruik de template <code>90. Templates/Project Template.md</code></span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div><div class="flow-content"><strong>Vervang <code>project-name</code> door de echte naam</strong><span>In frontmatter én in alle links — zelfde naam als tmux sessie en GitHub repo</span></div></div>
+            <div class="flow-step"><div class="flow-line"><div class="flow-dot"></div></div><div class="flow-content"><strong>Sla op in <code>11. Projects/02. Active/</code></strong><span>Links werken daarna direct vanuit Obsidian</span></div></div>
           </div>
         </div>
-        <p style="margin-top:12px"><strong>Daarna:</strong> open Obsidian om de backlog te bekijken, klik ▶️ Analyseer taken voor het plan, en ✅ Bevestig en bouw om te starten.</p>
-      </div>
 
-      <div class="docs-section">
-        <h2>Taken plannen en bouwen via Obsidian</h2>
-        <div class="flow">
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Open de project note in Obsidian</strong>
-              <span>Sla op in <code>11. Projects/02. Active/{project-naam}.md</code></span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Voeg taken toe in ## Backlog</strong>
-              <span>Elk item als <code>- [ ] wat er gebouwd moet worden</code></span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Klik ▶️ Analyseer taken</strong>
-              <span>Opent in nieuw tabblad — wacht tot de bevestigingspagina verschijnt (~30s). Claude analyseert de backlog en schrijft een implementatieplan terug naar ## Plan.</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Bekijk het plan in Obsidian</strong>
-              <span>Pas eventueel aan. Het plan bevat concrete stappen per taak.</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div></div>
-            <div class="flow-content">
-              <strong>Klik ✅ Bevestig en bouw</strong>
-              <span>Plan wordt als TASK.md naar de server geschreven, Claude Code sessie start, browser redirect naar claude.ai</span>
-            </div>
-          </div>
+        <div class="docs-section">
+          <h2>Sessie stoppen of resetten</h2>
+          <p>🛑 <strong>Stop</strong> kill de tmux sessie en verwijdert de temp file. Hierna kun je opnieuw starten.</p>
+          <p>↺ <strong>Herstart</strong> voert Stop en Start na elkaar uit — handig als de sessie vastloopt.</p>
+          <p>🔄 <strong>Reset</strong> is de harde reset: kill tmux, verwijdert temp file én kill alle remote-control processen. Gebruik als Stop + Herstart niet werkt.</p>
         </div>
-        <p style="margin-top:12px"><strong>Let op:</strong> de SSH credentials voor de Obsidian workflows moeten ingesteld zijn in n8n. Zie <em>Workflow importeren</em> hieronder.</p>
-      </div>
 
-      <div class="docs-section">
-        <h2>Project note aanmaken in Obsidian</h2>
-        <div class="flow">
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Nieuwe note aanmaken via template</strong>
-              <span>Gebruik de template <code>90. Templates/Project Template.md</code></span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div><div class="flow-connector"></div></div>
-            <div class="flow-content">
-              <strong>Vervang <code>project-name</code> door de echte naam</strong>
-              <span>In frontmatter én in alle vier de links — zelfde naam als tmux sessie en GitHub repo</span>
-            </div>
-          </div>
-          <div class="flow-step">
-            <div class="flow-line"><div class="flow-dot"></div></div>
-            <div class="flow-content">
-              <strong>Sla op in <code>11. Projects/02. Active/</code></strong>
-              <span>Links werken daarna direct vanuit Obsidian</span>
-            </div>
-          </div>
+        <div class="docs-section">
+          <h2>Keyboard shortcuts</h2>
+          <div class="code-block">⌘K / Ctrl+K   Command palette openen
+Esc            Command palette sluiten / panel sluiten
+↑ / ↓          Navigeren in de palette
+Enter          Actie uitvoeren in palette
+Enter          Taak bevestigen in + Taak veld
+Esc            + Taak veld sluiten</div>
         </div>
-      </div>
 
-      <div class="docs-section">
-        <h2>Sessie stoppen</h2>
-        <p>Klik 🛑 Stop bij het project op de site, of de Stop sessie link in Obsidian. Dit kill de tmux sessie en verwijdert de temp file op de server. De claude.ai tab gaat vanzelf dood.</p>
-        <p>Na stoppen kun je direct opnieuw starten — er wordt dan een nieuwe sessie aangemaakt.</p>
-      </div>
-
-      <div class="docs-section">
-        <h2>Workflow importeren in n8n</h2>
-        <p>Nodig bij een herinstallatie of migratie van n8n:</p>
-        <div class="code-block">1. n8n → Workflows → Import from file
+        <div class="docs-section">
+          <h2>Workflow importeren in n8n</h2>
+          <p>Nodig bij een herinstallatie of migratie van n8n:</p>
+          <div class="code-block">1. n8n → Workflows → Import from file
 2. Upload JSON uit /workflows/ in de GitHub repo
 3. Controleer credentials: "SSH Claude Code" en "SSH Obsidian/OpenCode/Fabric" moeten bestaan
 4. New Project Session: vervang {{GITHUB_PAT}} door je GitHub token
 5. Analyseer Taken + Bevestig en Bouw: selecteer "SSH Obsidian/OpenCode/Fabric" op de Obsidian SSH nodes
 6. Toggle elke workflow uit → aan om de webhook te registreren</div>
+        </div>
       </div>
-
     </div>
-  </div>
 
-  <!-- FAQ VIEW -->
-  <div id="view-faq" class="view">
-    <div class="docs">
-
-      <div class="docs-section">
-        <h2>Sessie start maar ik word niet geredirect</h2>
-        <p><strong>Symptoom:</strong> de pagina laadt lang en geeft dan "Fout: geen Claude URL gevonden."</p>
-        <p><strong>Oorzaak:</strong> <code>claude remote-control</code> heeft de URL nog niet naar het temp bestand geschreven binnen 60 seconden.</p>
-        <p><strong>Oplossing:</strong> wacht 10 seconden en klik opnieuw op Start. De workflow checkt eerst of er al een URL in de temp file staat — als Claude al draait, redirect je direct.</p>
-      </div>
-
-      <div class="docs-section">
-        <h2>"Failed to send response. You can try again."</h2>
-        <p><strong>Oorzaak:</strong> de verbinding tussen claude.ai en het <code>remote-control</code> proces op de server is verbroken. Dit gebeurt na een tijdout, serverherstart of netwerk-onderbreking.</p>
-        <p><strong>Oplossing:</strong> stop de sessie via de site en start opnieuw. Er wordt een nieuwe <code>remote-control</code> verbinding en een nieuwe claude.ai URL aangemaakt.</p>
-      </div>
-
-      <div class="docs-section">
-        <h2>claude.ai tab geeft een foutmelding na openen</h2>
-        <p><strong>Oorzaak:</strong> de sessie URL is verlopen. claude.ai remote-control URLs zijn eenmalig en tijdelijk.</p>
-        <p><strong>Oplossing:</strong> stop de sessie en start opnieuw. Er wordt dan een nieuwe URL gegenereerd.</p>
-      </div>
-
-      <div class="docs-section">
-        <h2>Stop / Reset knop opent een lege tab</h2>
-        <p>Normaal gedrag — de Stop en Reset knoppen openen de n8n webhook in een nieuw tabblad. n8n geeft een bevestigingspagina terug (of een lege response als de sessie al gestopt was). Sluit de tab na bevestiging.</p>
-        <p><strong>Sessie niet gestopt?</strong> Gebruik de 🔄 Reset knop: die kill zowel tmux als alle <code>remote-control</code> processen.</p>
-      </div>
-
-      <div class="docs-section">
-        <h2>Nieuw project mislukt (GitHub repo niet aangemaakt)</h2>
-        <p><strong>Oorzaak:</strong> de GitHub Personal Access Token (PAT) in de <em>New Project Session</em> workflow is verlopen of ingetrokken.</p>
-        <p><strong>Oplossing:</strong></p>
-        <div class="code-block">1. Ga naar github.com → Settings → Developer settings → Personal access tokens
+    <!-- FAQ VIEW -->
+    <div id="view-faq" class="view">
+      <div class="docs-wrap">
+        <div class="docs-section"><h2>Sessie start maar ik word niet geredirect</h2><p><strong>Symptoom:</strong> de pagina laadt lang en geeft dan "Fout: geen Claude URL gevonden."</p><p><strong>Oorzaak:</strong> <code>claude remote-control</code> heeft de URL nog niet naar het temp bestand geschreven binnen 60 seconden.</p><p><strong>Oplossing:</strong> wacht 10 seconden en klik opnieuw op Start. De workflow checkt eerst of er al een URL in de temp file staat — als Claude al draait, redirect je direct.</p></div>
+        <div class="docs-section"><h2>"Failed to send response. You can try again."</h2><p><strong>Oorzaak:</strong> de verbinding tussen claude.ai en het <code>remote-control</code> proces op de server is verbroken. Dit gebeurt na een timeout, serverherstart of netwerkonderbreking.</p><p><strong>Oplossing:</strong> klik ↺ Herstart op de projectkaart. Dit stop de sessie en start direct opnieuw.</p></div>
+        <div class="docs-section"><h2>claude.ai tab geeft een foutmelding na openen</h2><p><strong>Oorzaak:</strong> de sessie URL is verlopen. claude.ai remote-control URLs zijn eenmalig en tijdelijk.</p><p><strong>Oplossing:</strong> klik ↺ Herstart — er wordt een nieuwe URL gegenereerd.</p></div>
+        <div class="docs-section"><h2>Stop / Reset knop opent een lege tab</h2><p>Normaal gedrag — de Stop en Reset knoppen openen de n8n webhook in een nieuw tabblad. n8n geeft een bevestigingspagina terug. Sluit de tab na bevestiging.</p><p><strong>Sessie niet gestopt?</strong> Gebruik 🔄 Reset: die kill zowel tmux als alle <code>remote-control</code> processen.</p></div>
+        <div class="docs-section"><h2>Nieuw project mislukt (GitHub repo niet aangemaakt)</h2><p><strong>Oorzaak:</strong> de GitHub Personal Access Token (PAT) in de <em>New Project Session</em> workflow is verlopen of ingetrokken.</p><div class="code-block">1. Ga naar github.com → Settings → Developer settings → Personal access tokens
 2. Maak een nieuwe token aan (scope: repo)
 3. Open n8n → New Project Session workflow
 4. Update de Authorization header en de clone URL met de nieuwe token
-5. Sla op en activeer opnieuw</div>
-      </div>
-
-      <div class="docs-section">
-        <h2>tmux sessie bestaat al maar Claude reageert niet</h2>
-        <p><strong>Oorzaak:</strong> de tmux sessie leeft nog maar <code>claude remote-control</code> is gecrasht of gestopt.</p>
-        <p><strong>Oplossing:</strong> stop de sessie via de site en start opnieuw. Start verwijdert de temp file, stuurt <code>C-c</code> naar het claude window en herstart <code>remote-control</code>.</p>
-      </div>
-
-      <div class="docs-section">
-        <h2>Server niet bereikbaar / n8n geeft timeout</h2>
-        <p><strong>Check 1:</strong> is de Proxmox server aan? Host: <code>192.168.1.34</code></p>
-        <p><strong>Check 2:</strong> draait n8n nog? Ga naar <a href="https://n8n.jellespek.nl" target="_blank" style="color:#555">n8n.jellespek.nl</a> — laadt de UI?</p>
-        <p><strong>Check 3:</strong> SSH handmatig proberen: <code>ssh root@192.168.1.34</code></p>
-        <p><strong>Check 4:</strong> controleer of Docker nog draait op de server: <code>docker ps</code></p>
-      </div>
-
-      <div class="docs-section">
-        <h2>claude commando niet gevonden op de server</h2>
-        <p><strong>Symptoom:</strong> sessie start, temp file blijft leeg, geen URL na 60 seconden.</p>
-        <p><strong>Oorzaak:</strong> <code>claude</code> is niet geïnstalleerd of niet in <code>$PATH</code> voor de tmux sessie.</p>
-        <p><strong>Check via SSH:</strong></p>
-        <div class="code-block">ssh root@192.168.1.34
+5. Sla op en activeer opnieuw</div></div>
+        <div class="docs-section"><h2>tmux sessie bestaat al maar Claude reageert niet</h2><p><strong>Oorzaak:</strong> de tmux sessie leeft nog maar <code>claude remote-control</code> is gecrasht of gestopt.</p><p><strong>Oplossing:</strong> klik ↺ Herstart op de projectkaart.</p></div>
+        <div class="docs-section"><h2>Server niet bereikbaar / n8n geeft timeout</h2><p><strong>Check 1:</strong> is de Proxmox server aan? Host: <code>192.168.1.34</code></p><p><strong>Check 2:</strong> draait n8n nog? Ga naar <a href="https://n8n.jellespek.nl" target="_blank" style="color:var(--text-3)">n8n.jellespek.nl</a></p><p><strong>Check 3:</strong> SSH handmatig: <code>ssh root@192.168.1.34</code></p><p><strong>Check 4:</strong> <code>docker ps</code> op de server</p></div>
+        <div class="docs-section"><h2>claude commando niet gevonden op de server</h2><p><strong>Symptoom:</strong> sessie start, temp file blijft leeg, geen URL na 60 seconden.</p><div class="code-block">ssh root@192.168.1.34
 which claude          # moet een pad teruggeven
-claude --version      # moet werken</div>
-        <p>Indien niet gevonden: <code>npm install -g @anthropic-ai/claude-code</code></p>
+claude --version      # moet werken
+# Niet gevonden?
+npm install -g @anthropic-ai/claude-code</div></div>
+        <div class="docs-section"><h2>Vercel deployment werkt niet na push</h2><p><strong>Check:</strong> ga naar <a href="https://vercel.com" target="_blank" style="color:var(--text-3)">vercel.com</a> → project <em>project-manager</em> → Deployments. Meest voorkomende oorzaak: syntax fout in <code>index.html</code>.</p></div>
       </div>
-
-      <div class="docs-section">
-        <h2>Vercel deployment werkt niet na push</h2>
-        <p><strong>Check:</strong> ga naar <a href="https://vercel.com" target="_blank" style="color:#555">vercel.com</a> → project <em>project-manager</em> → Deployments. Staat er een failed build?</p>
-        <p><strong>Meest voorkomende oorzaak:</strong> syntax fout in <code>index.html</code>. Open de build logs voor details.</p>
-      </div>
-
     </div>
-  </div>
 
-  <div class="toast" id="toast"></div>
-
-  <script>
-    const N8N = 'https://n8n.jellespek.nl/webhook';
-
-    const projects = [
-      {
-        name: 'execution-engine',
-        label: 'Execution Engine',
-        folder: '/root/projects/personal/execution-engine',
-        github: 'https://github.com/lutjebroeker/execution-engine',
-        vercel: 'https://execution-engine.vercel.app',
-      },
-      {
-        name: 'fit-journey',
-        label: 'Fit Journey',
-        folder: '/root/projects/clients/fit-journey',
-        github: 'https://github.com/lutjebroeker/fit-journey',
-      },
-    ];
-
-    function showView(name, tab) {
-      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-      document.getElementById('view-' + name).classList.add('active');
-      tab.classList.add('active');
-    }
-
-    function render() {
-      const container = document.getElementById('projects');
-      container.innerHTML = projects.map(p => `
-        <div class="card">
-          <div class="card-main">
-            <div class="card-info">
-              <div class="card-name">${p.label}</div>
-              <div class="card-meta">
-                ${p.github ? `<a href="${p.github}" target="_blank">GitHub</a>` : ''}
-                ${p.vercel ? ` · <a href="${p.vercel}" target="_blank">Vercel</a>` : ''}
-                <span style="color:#333"> · </span>${p.folder}
-              </div>
-            </div>
-            <div class="card-actions">
-              <button class="btn btn-task" onclick="toggleTask('${p.name}')" title="Taak toevoegen aan backlog">+ Taak</button>
-              <button class="btn btn-start" onclick="start('${p.name}', '${p.folder}')">🚀 Start</button>
-              <button class="btn btn-stop" onclick="stop('${p.name}')">🛑 Stop</button>
-              <button class="btn btn-reset" onclick="reset('${p.name}')" title="Reset: kill tmux + claude processen">🔄 Reset</button>
-              <button class="btn btn-danger" onclick="startDanger('${p.name}', '${p.folder}')" title="Start met --dangerously-skip-permissions">⚠️</button>
-            </div>
+    <!-- SETTINGS VIEW -->
+    <div id="view-settings" class="view">
+      <div class="docs-wrap">
+        <div class="settings-section">
+          <h3>n8n verbinding</h3>
+          <div class="field">
+            <label>n8n Webhook Base URL</label>
+            <input type="text" id="setting-n8n-url" placeholder="https://n8n.jellespek.nl/webhook" />
+            <span class="field-hint">Alle webhook calls gebruiken deze base URL.</span>
           </div>
-          <div class="task-row" id="task-row-${p.name}">
-            <input type="text" id="task-input-${p.name}" placeholder="Beschrijf wat er gebouwd moet worden..." />
-            <button class="btn-add-task" onclick="addTask('${p.name}')">Toevoegen</button>
+          <div style="margin-top:12px">
+            <button class="btn btn-ghost btn-sm" onclick="saveSettings()">Opslaan</button>
           </div>
         </div>
-      `).join('');
+        <div class="settings-section">
+          <h3>Projecten</h3>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm" onclick="exportProjects()">Exporteer projecten</button>
+            <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+              Importeer projecten
+              <input type="file" accept=".json" style="display:none" onchange="importProjects(this)" />
+            </label>
+          </div>
+          <p style="margin-top:10px;font-size:0.78rem;color:var(--text-4)">Projecten worden opgeslagen in localStorage en blijven bewaard na reload. Export maakt een JSON back-up.</p>
+        </div>
+        <div class="settings-section">
+          <h3>Activiteitslog</h3>
+          <button class="btn btn-ghost btn-sm" onclick="clearActivity()">Wis activiteitslog</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ADD / EDIT PROJECT PANEL -->
+<div class="panel-overlay" id="panel-overlay" onclick="closePanelOnOverlay(event)">
+  <div class="panel" id="project-panel">
+    <div class="panel-header">
+      <span class="panel-title" id="panel-title">Project toevoegen</span>
+      <button class="panel-close" onclick="closePanel()">×</button>
+    </div>
+    <div class="panel-body">
+      <input type="hidden" id="panel-project-id" />
+      <div class="field">
+        <label>Naam <span class="field-optional">(leesbaar)</span></label>
+        <input type="text" id="panel-label" placeholder="Execution Engine" oninput="deriveSlug()" />
+      </div>
+      <div class="field">
+        <label>Slug <span class="field-optional">(tmux / GitHub naam)</span></label>
+        <input type="text" id="panel-name" placeholder="execution-engine" pattern="[a-z0-9\-]+" />
+        <span class="field-hint">Alleen kleine letters, cijfers en koppeltekens. Niet aanpasbaar na aanmaken.</span>
+      </div>
+      <div class="field">
+        <label>Serverpad</label>
+        <input type="text" id="panel-folder" placeholder="/root/projects/execution-engine" />
+      </div>
+      <div class="field">
+        <label>GitHub URL <span class="field-optional">(optioneel)</span></label>
+        <input type="text" id="panel-github" placeholder="https://github.com/lutjebroeker/project" />
+      </div>
+      <div class="field">
+        <label>Vercel URL <span class="field-optional">(optioneel)</span></label>
+        <input type="text" id="panel-vercel" placeholder="https://project.vercel.app" />
+      </div>
+      <div class="field">
+        <label>Groep</label>
+        <select id="panel-group">
+          <option value="personal">Personal</option>
+          <option value="clients">Clients</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
+    </div>
+    <div class="panel-footer">
+      <button class="btn btn-ghost" onclick="closePanel()">Annuleren</button>
+      <button class="btn btn-primary" id="panel-save-btn" onclick="saveProject()">Opslaan</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="dialog-overlay" id="dialog-overlay">
+  <div class="dialog">
+    <div class="dialog-title" id="dialog-title">Weet je het zeker?</div>
+    <div class="dialog-msg" id="dialog-msg"></div>
+    <div class="dialog-actions">
+      <button class="btn btn-ghost" onclick="closeDialog()">Annuleren</button>
+      <button class="btn btn-danger-solid" id="dialog-confirm-btn" onclick="confirmDialog()">Bevestigen</button>
+    </div>
+  </div>
+</div>
+
+<!-- COMMAND PALETTE -->
+<div class="palette-overlay" id="palette-overlay" onclick="closePaletteOnOverlay(event)">
+  <div class="palette">
+    <div class="palette-input-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="palette-input" id="palette-input" placeholder="Zoek een actie..." oninput="filterPalette()" onkeydown="paletteKeydown(event)" autocomplete="off" />
+      <span class="palette-esc">Esc</span>
+    </div>
+    <div class="palette-results" id="palette-results"></div>
+  </div>
+</div>
+
+<!-- CONTEXT MENU -->
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" id="ctx-edit" onclick="ctxEdit()">✎ Bewerken</div>
+  <div class="ctx-item" onclick="ctxCopyFolder()">⎘ Kopieer pad</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" onclick="ctxDelete()">✕ Verwijder project</div>
+</div>
+
+<!-- TOAST STACK -->
+<div class="toast-stack" id="toast-stack"></div>
+
+<script>
+// ────────────────────────────────────────────────────────
+// CONFIG & SEED
+// ────────────────────────────────────────────────────────
+const SEED_PROJECTS = [
+  { name: 'execution-engine', label: 'Execution Engine', folder: '/root/projects/personal/execution-engine', github: 'https://github.com/lutjebroeker/execution-engine', vercel: 'https://execution-engine.vercel.app', group: 'personal' },
+  { name: 'fit-journey',      label: 'Fit Journey',      folder: '/root/projects/clients/fit-journey',       github: 'https://github.com/lutjebroeker/fit-journey', group: 'clients' },
+];
+
+// ────────────────────────────────────────────────────────
+// STORE
+// ────────────────────────────────────────────────────────
+const Store = {
+  get projects() {
+    try { return JSON.parse(localStorage.getItem('pm_projects') || 'null'); } catch { return null; }
+  },
+  set projects(v) { localStorage.setItem('pm_projects', JSON.stringify(v)); },
+
+  get status() {
+    try { return JSON.parse(localStorage.getItem('pm_status') || '{}'); } catch { return {}; }
+  },
+  set status(v) { localStorage.setItem('pm_status', JSON.stringify(v)); },
+
+  get activity() {
+    try { return JSON.parse(localStorage.getItem('pm_activity') || '[]'); } catch { return []; }
+  },
+  set activity(v) { localStorage.setItem('pm_activity', JSON.stringify(v)); },
+
+  get ui() {
+    try { return JSON.parse(localStorage.getItem('pm_ui') || '{}'); } catch { return {}; }
+  },
+  set ui(v) { localStorage.setItem('pm_ui', JSON.stringify(v)); },
+
+  getN8N() {
+    return (this.ui.n8nBase || 'https://n8n.jellespek.nl/webhook').replace(/\/$/, '');
+  },
+
+  setStatus(id, status) {
+    const s = this.status;
+    s[id] = status;
+    this.status = s;
+  },
+
+  pushActivity(entry) {
+    const log = this.activity;
+    log.unshift({ ...entry, id: crypto.randomUUID(), timestamp: new Date().toISOString() });
+    if (log.length > 50) log.length = 50;
+    this.activity = log;
+    renderLog();
+  },
+
+  init() {
+    if (this.projects === null) {
+      this.projects = SEED_PROJECTS.map(p => ({ ...p, id: crypto.randomUUID(), order: SEED_PROJECTS.indexOf(p) }));
     }
+  }
+};
 
-    function start(name, folder) {
-      window.open(`${N8N}/start-project?session=${name}&folder=${encodeURIComponent(folder)}`, '_blank');
-    }
+Store.init();
 
-    function startDanger(name, folder) {
-      window.open(`${N8N}/start-project?session=${name}&folder=${encodeURIComponent(folder)}&mode=dangerous`, '_blank');
-    }
+// ────────────────────────────────────────────────────────
+// NAV & VIEWS
+// ────────────────────────────────────────────────────────
+const VIEW_TITLES = { projects: 'Projects', docs: 'Documentatie', handleiding: 'Handleiding', faq: 'FAQ', settings: 'Instellingen' };
 
-    function stop(name) {
-      window.open(`${N8N}/stop-project?session=${name}`, '_blank');
-    }
+function showView(name, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  document.getElementById('page-title').textContent = VIEW_TITLES[name] || name;
 
-    function reset(name) {
-      window.open(`${N8N}/reset-project?session=${name}`, '_blank');
-    }
+  const cta = document.getElementById('topbar-cta');
+  if (name === 'projects') {
+    cta.style.display = '';
+    cta.textContent = '+ Project';
+    cta.onclick = openAddPanel;
+  } else {
+    cta.style.display = 'none';
+  }
 
-    function toggleTask(name) {
-      const row = document.getElementById('task-row-' + name);
-      const input = document.getElementById('task-input-' + name);
-      const isOpen = row.classList.toggle('open');
-      if (isOpen) {
-        input.focus();
-      } else {
-        input.value = '';
-      }
-    }
+  const ui = Store.ui;
+  ui.activeView = name;
+  Store.ui = ui;
+}
 
-    function addTask(name) {
-      const input = document.getElementById('task-input-' + name);
-      const task = input.value.trim();
-      if (!task) return;
-      window.open(`${N8N}/add-task?project=${encodeURIComponent(name)}&task=${encodeURIComponent(task)}`, '_blank');
-      input.value = '';
-      document.getElementById('task-row-' + name).classList.remove('open');
-    }
+// Restore last view
+(function() {
+  const last = Store.ui.activeView;
+  if (last && last !== 'projects') {
+    const nav = document.getElementById('nav-' + last);
+    showView(last, nav);
+  }
+})();
 
-    // Enter key in task input
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && e.target.id && e.target.id.startsWith('task-input-')) {
-        const name = e.target.id.replace('task-input-', '');
-        addTask(name);
-      }
-      if (e.key === 'Escape' && e.target.id && e.target.id.startsWith('task-input-')) {
-        const name = e.target.id.replace('task-input-', '');
-        toggleTask(name);
-      }
-    });
+// ────────────────────────────────────────────────────────
+// SIDEBAR COLLAPSE
+// ────────────────────────────────────────────────────────
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  const collapsed = sb.classList.toggle('collapsed');
+  const ui = Store.ui;
+  ui.sidebarCollapsed = collapsed;
+  Store.ui = ui;
+}
 
-    function newProject() {
-      const name = document.getElementById('new-name').value.trim().toLowerCase().replace(/\s+/g, '-');
-      if (!name) return;
-      window.open(`${N8N}/new-project?name=${encodeURIComponent(name)}`, '_blank');
-    }
+if (Store.ui.sidebarCollapsed) document.getElementById('sidebar').classList.add('collapsed');
 
-    document.getElementById('new-name').addEventListener('keydown', e => {
-      if (e.key === 'Enter') newProject();
-    });
+// ────────────────────────────────────────────────────────
+// RENDER PROJECTS
+// ────────────────────────────────────────────────────────
+const GROUP_ORDER = ['personal', 'clients', 'archived'];
+const GROUP_LABELS = { personal: 'Persoonlijk', clients: 'Clients', archived: 'Archief' };
 
-    let toastTimer;
-    function toast(msg) {
-      const el = document.getElementById('toast');
-      el.textContent = msg;
-      el.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
-    }
+function render() {
+  const projects = Store.projects || [];
+  const container = document.getElementById('projects-grid');
+  const count = document.getElementById('projects-count');
 
+  count.textContent = projects.length === 1 ? '1 project' : `${projects.length} projecten`;
+
+  if (projects.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">⊞</div>
+        <div class="empty-title">Nog geen projecten</div>
+        <div class="empty-sub">Voeg je eerste project toe via de knop rechtsboven.</div>
+        <button class="btn btn-primary" onclick="openAddPanel()">+ Project toevoegen</button>
+      </div>`;
+    return;
+  }
+
+  const grouped = {};
+  projects.forEach(p => {
+    const g = p.group || 'personal';
+    if (!grouped[g]) grouped[g] = [];
+    grouped[g].push(p);
+  });
+
+  let html = '';
+  GROUP_ORDER.forEach(group => {
+    if (!grouped[group]) return;
+    const isArchived = group === 'archived';
+    html += `<details ${isArchived ? '' : 'open'} style="margin-bottom:4px">
+      <summary style="cursor:pointer;font-size:0.72rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-4);padding:8px 4px;list-style:none;display:flex;align-items:center;gap:8px;user-select:none;">
+        <span style="color:var(--text-4);font-size:10px">▶</span> ${GROUP_LABELS[group]} <span style="color:var(--text-4);font-weight:400">(${grouped[group].length})</span>
+      </summary>
+      <div style="display:flex;flex-direction:column;gap:10px;padding-top:8px">`;
+    grouped[group].forEach(p => { html += renderCard(p); });
+    html += '</div></details>';
+  });
+
+  container.innerHTML = html;
+  renderLog();
+}
+
+function renderCard(p) {
+  const status = (Store.status || {})[p.id] || 'unknown';
+  const timer = getTimer(p.id, status);
+  return `
+  <div class="card" id="card-${p.id}">
+    <div class="card-main">
+      <div class="status-dot ${status}" title="Status: ${status}"></div>
+      <div class="card-info">
+        <div class="card-name-row">
+          <span class="card-name">${esc(p.label)}</span>
+          ${timer ? `<span class="card-timer">${timer}</span>` : ''}
+        </div>
+        <div class="card-meta">
+          ${p.github ? `<a href="${esc(p.github)}" target="_blank">GitHub</a><span>·</span>` : ''}
+          ${p.vercel ? `<a href="${esc(p.vercel)}" target="_blank">Vercel</a><span>·</span>` : ''}
+          <span class="card-folder" onclick="copyText('${esc(p.folder)}', this)" title="Klik om te kopiëren">
+            <span style="font-size:11px">📁</span>${esc(p.folder)}
+          </span>
+        </div>
+      </div>
+      <div class="card-actions">
+        <button class="btn btn-start btn-sm" onclick="actionStart('${p.id}')">🚀 Start</button>
+        <button class="btn btn-stop btn-sm"  onclick="actionStop('${p.id}')">🛑 Stop</button>
+        <button class="btn btn-restart btn-sm" onclick="actionRestart('${p.id}')" title="Stop + Start">↺</button>
+        <button class="btn btn-reset btn-sm"  onclick="actionReset('${p.id}')" title="Hard reset: kill alles">🔄</button>
+        <button class="btn btn-danger btn-sm" onclick="actionStartDanger('${p.id}')" title="Start met --dangerously-skip-permissions">⚠️</button>
+        <button class="card-menu-btn" onclick="openCtxMenu(event, '${p.id}')" title="Meer opties">⋯</button>
+      </div>
+    </div>
+    <div class="card-secondary">
+      <button class="btn btn-ghost btn-sm" onclick="toggleTask('${p.id}')">+ Taak</button>
+      <button class="btn btn-analyse btn-sm" onclick="actionAnalyse('${p.id}')">▶ Analyseer</button>
+      <button class="btn btn-build btn-sm"   onclick="actionBuild('${p.id}')">✅ Bouw</button>
+      <button class="btn btn-ghost btn-sm"   onclick="actionNewRepo('${p.id}')">🔨 Maak aan</button>
+    </div>
+    <div class="task-row" id="task-row-${p.id}">
+      <input type="text" id="task-input-${p.id}" placeholder="Beschrijf wat er gebouwd moet worden..." />
+      <button class="btn btn-build btn-sm" onclick="addTask('${p.id}')">Toevoegen</button>
+      <span class="task-hint">↵ bevestig · Esc sluit</span>
+    </div>
+  </div>`;
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function getTimer(id, status) {
+  if (status !== 'active') return null;
+  const log = Store.activity;
+  const entry = log.find(e => e.projectId === id && (e.action === 'start' || e.action === 'start_danger'));
+  if (!entry) return 'actief';
+  const mins = Math.floor((Date.now() - new Date(entry.timestamp)) / 60000);
+  if (mins < 1) return 'actief ~<1m';
+  if (mins < 60) return `actief ~${mins}m`;
+  return `actief ~${Math.floor(mins/60)}u`;
+}
+
+// ────────────────────────────────────────────────────────
+// ACTIVITY LOG
+// ────────────────────────────────────────────────────────
+const ACTION_ICONS = { start:'🚀', start_danger:'⚠️', stop:'🛑', reset:'🔄', restart:'↺', task_add:'➕', analyse:'▶️', build:'✅', project_create:'🔨', project_delete:'✕' };
+const ACTION_LABELS = { start:'Gestart', start_danger:'Gestart (⚠️)', stop:'Gestopt', reset:'Gereset', restart:'Herstart', task_add:'Taak toegevoegd', analyse:'Analyseer gestart', build:'Bouw gestart', project_create:'Project aangemaakt', project_delete:'Project verwijderd' };
+
+function renderLog() {
+  const el = document.getElementById('log-entries');
+  const log = Store.activity.slice(0, 10);
+  if (log.length === 0) { el.innerHTML = '<div class="log-empty">Nog geen activiteit</div>'; return; }
+  el.innerHTML = log.map(e => `
+    <div class="log-entry">
+      <span class="log-icon">${ACTION_ICONS[e.action] || '·'}</span>
+      <div class="log-text">
+        <div class="log-project">${esc(e.projectName)}</div>
+        <div class="log-action">${ACTION_LABELS[e.action] || e.action}${e.detail ? ': ' + esc(e.detail.slice(0,30)) : ''}</div>
+      </div>
+      <span class="log-time">${relTime(e.timestamp)}</span>
+    </div>`).join('');
+}
+
+function relTime(iso) {
+  const s = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s/60)}m`;
+  return `${Math.floor(s/3600)}u`;
+}
+
+setInterval(() => { if (Store.activity.length) renderLog(); }, 30000);
+
+// ────────────────────────────────────────────────────────
+// ACTIONS
+// ────────────────────────────────────────────────────────
+function getProject(id) { return (Store.projects || []).find(p => p.id === id); }
+const N8N = () => Store.getN8N();
+
+function actionStart(id) {
+  const p = getProject(id);
+  if (!p) return;
+  Store.setStatus(id, 'connecting');
+  Store.pushActivity({ projectId: id, projectName: p.label, action: 'start' });
+  window.open(`${N8N()}/start-project?session=${encodeURIComponent(p.name)}&folder=${encodeURIComponent(p.folder)}`, '_blank');
+  setTimeout(() => { Store.setStatus(id, 'active'); render(); }, 2000);
+  render();
+  toast('success', `🚀 ${p.label} wordt gestart…`);
+}
+
+function actionStartDanger(id) {
+  const p = getProject(id);
+  if (!p) return;
+  Store.setStatus(id, 'connecting');
+  Store.pushActivity({ projectId: id, projectName: p.label, action: 'start_danger' });
+  window.open(`${N8N()}/start-project?session=${encodeURIComponent(p.name)}&folder=${encodeURIComponent(p.folder)}&mode=dangerous`, '_blank');
+  setTimeout(() => { Store.setStatus(id, 'active'); render(); }, 2000);
+  render();
+  toast('warning', `⚠️ ${p.label} gestart met skip-permissions`);
+}
+
+function actionStop(id) {
+  const p = getProject(id);
+  if (!p) return;
+  confirm(`🛑 ${p.label} stoppen?`, 'De tmux sessie wordt gestopt en de temp file verwijderd.', 'Stoppen', () => {
+    Store.setStatus(id, 'stopped');
+    Store.pushActivity({ projectId: id, projectName: p.label, action: 'stop' });
+    window.open(`${N8N()}/stop-project?session=${encodeURIComponent(p.name)}`, '_blank');
     render();
-  </script>
+    toast('info', `🛑 ${p.label} gestopt`);
+  });
+}
+
+function actionRestart(id) {
+  const p = getProject(id);
+  if (!p) return;
+  Store.setStatus(id, 'stopped');
+  Store.pushActivity({ projectId: id, projectName: p.label, action: 'restart' });
+  window.open(`${N8N()}/stop-project?session=${encodeURIComponent(p.name)}`, '_blank');
+  render();
+  toast('info', `↺ ${p.label} herstart…`);
+  setTimeout(() => {
+    Store.setStatus(id, 'connecting');
+    window.open(`${N8N()}/start-project?session=${encodeURIComponent(p.name)}&folder=${encodeURIComponent(p.folder)}`, '_blank');
+    setTimeout(() => { Store.setStatus(id, 'active'); render(); }, 2000);
+    render();
+  }, 700);
+}
+
+function actionReset(id) {
+  const p = getProject(id);
+  if (!p) return;
+  confirm(`🔄 ${p.label} resetten?`, 'Dit kill tmux, verwijdert de temp file én kill alle remote-control processen.', 'Resetten', () => {
+    Store.setStatus(id, 'stopped');
+    Store.pushActivity({ projectId: id, projectName: p.label, action: 'reset' });
+    window.open(`${N8N()}/reset-project?session=${encodeURIComponent(p.name)}`, '_blank');
+    render();
+    toast('info', `🔄 ${p.label} gereset`);
+  });
+}
+
+function actionAnalyse(id) {
+  const p = getProject(id);
+  if (!p) return;
+  Store.pushActivity({ projectId: id, projectName: p.label, action: 'analyse' });
+  window.open(`${N8N()}/analyse-tasks?project=${encodeURIComponent(p.name)}`, '_blank');
+  toast('info', `▶ Analyseer taken voor ${p.label}…`);
+}
+
+function actionBuild(id) {
+  const p = getProject(id);
+  if (!p) return;
+  Store.setStatus(id, 'connecting');
+  Store.pushActivity({ projectId: id, projectName: p.label, action: 'build' });
+  window.open(`${N8N()}/build-task?project=${encodeURIComponent(p.name)}&folder=${encodeURIComponent(p.folder)}`, '_blank');
+  setTimeout(() => { Store.setStatus(id, 'active'); render(); }, 2000);
+  render();
+  toast('success', `✅ Bouw gestart voor ${p.label}`);
+}
+
+function actionNewRepo(id) {
+  const p = getProject(id);
+  if (!p) return;
+  Store.setStatus(id, 'connecting');
+  Store.pushActivity({ projectId: id, projectName: p.label, action: 'project_create' });
+  window.open(`${N8N()}/new-project?name=${encodeURIComponent(p.name)}`, '_blank');
+  setTimeout(() => { Store.setStatus(id, 'active'); render(); }, 2000);
+  render();
+  toast('success', `🔨 GitHub repo aanmaken voor ${p.label}…`);
+}
+
+// ── Task input ──
+function toggleTask(id) {
+  const row = document.getElementById('task-row-' + id);
+  const input = document.getElementById('task-input-' + id);
+  if (!row) return;
+  const open = row.classList.toggle('open');
+  if (open) input.focus();
+  else input.value = '';
+}
+
+function addTask(id) {
+  const input = document.getElementById('task-input-' + id);
+  if (!input) return;
+  const task = input.value.trim();
+  if (!task) return;
+  const p = getProject(id);
+  if (!p) return;
+  Store.pushActivity({ projectId: id, projectName: p.label, action: 'task_add', detail: task });
+  window.open(`${N8N()}/add-task?project=${encodeURIComponent(p.name)}&task=${encodeURIComponent(task)}`, '_blank');
+  input.value = '';
+  document.getElementById('task-row-' + id).classList.remove('open');
+  toast('success', `➕ Taak toegevoegd aan ${p.label}`);
+}
+
+// ── Keyboard events ──
+document.addEventListener('keydown', e => {
+  // Task input row keys
+  if (e.target.id && e.target.id.startsWith('task-input-')) {
+    const id = e.target.id.replace('task-input-', '');
+    if (e.key === 'Enter') { e.preventDefault(); addTask(id); }
+    if (e.key === 'Escape') toggleTask(id);
+    return;
+  }
+  // Panel input — don't intercept
+  if (e.target.closest('.panel') || e.target.closest('.dialog')) return;
+  // Command palette
+  if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); openPalette(); return; }
+  if (e.key === 'Escape') { closePalette(); closeCtxMenu(); return; }
+});
+
+// ────────────────────────────────────────────────────────
+// ADD / EDIT PANEL
+// ────────────────────────────────────────────────────────
+let slugEdited = false;
+
+function openAddPanel() {
+  slugEdited = false;
+  document.getElementById('panel-title').textContent = 'Project toevoegen';
+  document.getElementById('panel-save-btn').textContent = 'Toevoegen';
+  document.getElementById('panel-project-id').value = '';
+  document.getElementById('panel-label').value = '';
+  document.getElementById('panel-name').value = '';
+  document.getElementById('panel-name').disabled = false;
+  document.getElementById('panel-folder').value = '';
+  document.getElementById('panel-github').value = '';
+  document.getElementById('panel-vercel').value = '';
+  document.getElementById('panel-group').value = 'personal';
+  openPanel();
+}
+
+function openEditPanel(id) {
+  const p = getProject(id);
+  if (!p) return;
+  slugEdited = true;
+  document.getElementById('panel-title').textContent = 'Project bewerken';
+  document.getElementById('panel-save-btn').textContent = 'Opslaan';
+  document.getElementById('panel-project-id').value = p.id;
+  document.getElementById('panel-label').value = p.label;
+  document.getElementById('panel-name').value = p.name;
+  document.getElementById('panel-name').disabled = true;
+  document.getElementById('panel-folder').value = p.folder;
+  document.getElementById('panel-github').value = p.github || '';
+  document.getElementById('panel-vercel').value = p.vercel || '';
+  document.getElementById('panel-group').value = p.group || 'personal';
+  openPanel();
+}
+
+function openPanel() {
+  document.getElementById('panel-overlay').classList.add('open');
+  document.getElementById('project-panel').classList.add('open');
+  setTimeout(() => document.getElementById('panel-label').focus(), 50);
+}
+
+function closePanel() {
+  document.getElementById('panel-overlay').classList.remove('open');
+  document.getElementById('project-panel').classList.remove('open');
+}
+
+function closePanelOnOverlay(e) {
+  if (e.target === document.getElementById('panel-overlay')) closePanel();
+}
+
+function deriveSlug() {
+  if (slugEdited) return;
+  const label = document.getElementById('panel-label').value;
+  document.getElementById('panel-name').value = label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
+
+document.getElementById('panel-name').addEventListener('input', () => { slugEdited = true; });
+
+function saveProject() {
+  const id = document.getElementById('panel-project-id').value;
+  const label = document.getElementById('panel-label').value.trim();
+  const name  = document.getElementById('panel-name').value.trim();
+  const folder = document.getElementById('panel-folder').value.trim();
+  const github = document.getElementById('panel-github').value.trim();
+  const vercel = document.getElementById('panel-vercel').value.trim();
+  const group  = document.getElementById('panel-group').value;
+
+  if (!label || !name || !folder) { toast('error', 'Vul naam, slug en serverpad in.'); return; }
+  if (!/^[a-z0-9-]+$/.test(name)) { toast('error', 'Slug mag alleen kleine letters, cijfers en koppeltekens bevatten.'); return; }
+
+  const projects = Store.projects || [];
+
+  if (id) {
+    const idx = projects.findIndex(p => p.id === id);
+    if (idx !== -1) {
+      projects[idx] = { ...projects[idx], label, folder, github: github || undefined, vercel: vercel || undefined, group };
+      Store.projects = projects;
+      toast('success', `${label} bijgewerkt`);
+    }
+  } else {
+    if (projects.some(p => p.name === name)) { toast('error', `Slug "${name}" bestaat al.`); return; }
+    const newP = { id: crypto.randomUUID(), name, label, folder, github: github || undefined, vercel: vercel || undefined, group, order: projects.length };
+    Store.projects = [...projects, newP];
+    Store.pushActivity({ projectId: newP.id, projectName: label, action: 'project_create' });
+    toast('success', `${label} toegevoegd`);
+  }
+
+  closePanel();
+  render();
+}
+
+// ────────────────────────────────────────────────────────
+// CONFIRM DIALOG
+// ────────────────────────────────────────────────────────
+let _dialogCb = null;
+
+function confirm(title, msg, btnLabel, cb) {
+  document.getElementById('dialog-title').textContent = title;
+  document.getElementById('dialog-msg').textContent = msg;
+  document.getElementById('dialog-confirm-btn').textContent = btnLabel;
+  _dialogCb = cb;
+  document.getElementById('dialog-overlay').classList.add('open');
+}
+
+function confirmDialog() {
+  closeDialog();
+  if (_dialogCb) { _dialogCb(); _dialogCb = null; }
+}
+
+function closeDialog() {
+  document.getElementById('dialog-overlay').classList.remove('open');
+}
+
+// ────────────────────────────────────────────────────────
+// CONTEXT MENU
+// ────────────────────────────────────────────────────────
+let _ctxProjectId = null;
+
+function openCtxMenu(e, id) {
+  e.stopPropagation();
+  _ctxProjectId = id;
+  const menu = document.getElementById('ctx-menu');
+  menu.classList.add('open');
+  const x = Math.min(e.clientX, window.innerWidth - 180);
+  const y = Math.min(e.clientY, window.innerHeight - 120);
+  menu.style.left = x + 'px';
+  menu.style.top  = y + 'px';
+}
+
+function closeCtxMenu() {
+  document.getElementById('ctx-menu').classList.remove('open');
+  _ctxProjectId = null;
+}
+
+function ctxEdit() {
+  closeCtxMenu();
+  if (_ctxProjectId) openEditPanel(_ctxProjectId);
+}
+
+function ctxCopyFolder() {
+  const p = getProject(_ctxProjectId);
+  closeCtxMenu();
+  if (p) copyText(p.folder);
+}
+
+function ctxDelete() {
+  const p = getProject(_ctxProjectId);
+  closeCtxMenu();
+  if (!p) return;
+  confirm(`${p.label} verwijderen?`, 'Het project wordt uit de lijst verwijderd. De tmux sessie en bestanden op de server blijven actief.', 'Verwijderen', () => {
+    const projects = (Store.projects || []).filter(x => x.id !== p.id);
+    Store.projects = projects;
+    Store.pushActivity({ projectId: p.id, projectName: p.label, action: 'project_delete' });
+    render();
+    toast('info', `${p.label} verwijderd`);
+  });
+}
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ctx-menu') && !e.target.closest('.card-menu-btn')) closeCtxMenu();
+  if (!e.target.closest('.dialog') && e.target === document.getElementById('dialog-overlay')) closeDialog();
+});
+
+// ────────────────────────────────────────────────────────
+// COMMAND PALETTE
+// ────────────────────────────────────────────────────────
+let _paletteSelected = 0;
+let _paletteItems = [];
+
+function buildPaletteItems() {
+  const projects = Store.projects || [];
+  const items = [];
+
+  projects.forEach(p => {
+    items.push({ group: 'Sessies', icon: '🚀', label: `Start — ${p.label}`, sub: p.name, action: () => actionStart(p.id) });
+    items.push({ group: 'Sessies', icon: '🛑', label: `Stop — ${p.label}`,  sub: p.name, action: () => actionStop(p.id) });
+    items.push({ group: 'Sessies', icon: '↺',  label: `Herstart — ${p.label}`, sub: p.name, action: () => actionRestart(p.id) });
+    items.push({ group: 'Sessies', icon: '🔄', label: `Reset — ${p.label}`, sub: p.name, action: () => actionReset(p.id) });
+    items.push({ group: 'Taken',   icon: '▶',  label: `Analyseer taken — ${p.label}`, sub: p.name, action: () => actionAnalyse(p.id) });
+    items.push({ group: 'Taken',   icon: '✅', label: `Bouw — ${p.label}`, sub: p.name, action: () => actionBuild(p.id) });
+    items.push({ group: 'Taken',   icon: '➕', label: `Taak toevoegen — ${p.label}`, sub: p.name, action: () => { closePalette(); showView('projects', document.getElementById('nav-projects')); setTimeout(() => toggleTask(p.id), 50); } });
+  });
+
+  items.push({ group: 'Beheer', icon: '⊞', label: 'Project toevoegen', sub: '', action: () => { closePalette(); openAddPanel(); } });
+  items.push({ group: 'Beheer', icon: '⎙', label: 'Open Docs', sub: '', action: () => { closePalette(); showView('docs', document.getElementById('nav-docs')); } });
+  items.push({ group: 'Beheer', icon: '⚙', label: 'Instellingen', sub: '', action: () => { closePalette(); showView('settings', null); } });
+  items.push({ group: 'Beheer', icon: '🔗', label: 'Open n8n', sub: Store.getN8N().replace('/webhook',''), action: () => window.open(Store.getN8N().replace('/webhook',''), '_blank') });
+
+  return items;
+}
+
+function openPalette() {
+  _paletteSelected = 0;
+  _paletteItems = buildPaletteItems();
+  document.getElementById('palette-input').value = '';
+  document.getElementById('palette-overlay').classList.add('open');
+  setTimeout(() => document.getElementById('palette-input').focus(), 50);
+  renderPaletteResults(_paletteItems);
+}
+
+function closePalette() {
+  document.getElementById('palette-overlay').classList.remove('open');
+}
+
+function closePaletteOnOverlay(e) {
+  if (e.target === document.getElementById('palette-overlay')) closePalette();
+}
+
+function filterPalette() {
+  const q = document.getElementById('palette-input').value.toLowerCase();
+  _paletteSelected = 0;
+  if (!q) { renderPaletteResults(_paletteItems); return; }
+  const filtered = _paletteItems.filter(i => (i.label + i.sub).toLowerCase().includes(q));
+  renderPaletteResults(filtered);
+}
+
+function renderPaletteResults(items) {
+  const el = document.getElementById('palette-results');
+  if (items.length === 0) { el.innerHTML = '<div class="palette-empty">Geen resultaten</div>'; return; }
+  const grouped = {};
+  items.forEach(item => {
+    if (!grouped[item.group]) grouped[item.group] = [];
+    grouped[item.group].push(item);
+  });
+  let html = '';
+  Object.entries(grouped).forEach(([group, groupItems]) => {
+    html += `<div class="palette-group-label">${group}</div>`;
+    groupItems.forEach((item, i) => {
+      const globalIdx = items.indexOf(item);
+      html += `<div class="palette-item ${globalIdx === _paletteSelected ? 'selected' : ''}" onmouseenter="selectPaletteItem(${globalIdx})" onclick="executePaletteItem(${globalIdx})">
+        <div class="palette-item-icon">${item.icon}</div>
+        <div class="palette-item-text">
+          <div class="palette-item-label">${esc(item.label)}</div>
+          ${item.sub ? `<div class="palette-item-sub">${esc(item.sub)}</div>` : ''}
+        </div>
+      </div>`;
+    });
+  });
+  el.innerHTML = html;
+  // Re-attach filtered items list for keyboard nav
+  el._items = items;
+}
+
+function selectPaletteItem(idx) {
+  _paletteSelected = idx;
+  document.querySelectorAll('.palette-item').forEach((el, i) => {
+    el.classList.toggle('selected', i === idx);
+  });
+}
+
+function executePaletteItem(idx) {
+  const results = document.getElementById('palette-results');
+  const items = results._items || _paletteItems;
+  const item = items[idx];
+  if (item) { closePalette(); item.action(); }
+}
+
+function paletteKeydown(e) {
+  const results = document.getElementById('palette-results');
+  const items = results._items || _paletteItems;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    _paletteSelected = Math.min(_paletteSelected + 1, items.length - 1);
+    selectPaletteItem(_paletteSelected);
+    results.querySelectorAll('.palette-item')[_paletteSelected]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    _paletteSelected = Math.max(_paletteSelected - 1, 0);
+    selectPaletteItem(_paletteSelected);
+    results.querySelectorAll('.palette-item')[_paletteSelected]?.scrollIntoView({ block: 'nearest' });
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    executePaletteItem(_paletteSelected);
+  } else if (e.key === 'Escape') {
+    closePalette();
+  }
+}
+
+// ────────────────────────────────────────────────────────
+// TOAST
+// ────────────────────────────────────────────────────────
+function toast(type, msg) {
+  const stack = document.getElementById('toast-stack');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<div class="toast-dot"></div><span class="toast-msg">${esc(msg)}</span><button class="toast-close" onclick="this.parentElement.remove()">×</button>`;
+  stack.appendChild(el);
+  requestAnimationFrame(() => { requestAnimationFrame(() => el.classList.add('show')); });
+  const maxToasts = 3;
+  while (stack.children.length > maxToasts) stack.removeChild(stack.firstChild);
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 250); }, 4000);
+}
+
+// ────────────────────────────────────────────────────────
+// COPY HELPER
+// ────────────────────────────────────────────────────────
+function copyText(text, el) {
+  navigator.clipboard.writeText(text).then(() => {
+    if (el) {
+      const orig = el.innerHTML;
+      el.innerHTML = '✓ Gekopieerd';
+      el.style.color = 'var(--green)';
+      setTimeout(() => { el.innerHTML = orig; el.style.color = ''; }, 1500);
+    } else {
+      toast('success', 'Gekopieerd naar klembord');
+    }
+  });
+}
+
+// ────────────────────────────────────────────────────────
+// SETTINGS
+// ────────────────────────────────────────────────────────
+function saveSettings() {
+  const url = document.getElementById('setting-n8n-url').value.trim();
+  const ui = Store.ui;
+  if (url) ui.n8nBase = url;
+  else delete ui.n8nBase;
+  Store.ui = ui;
+  toast('success', 'Instellingen opgeslagen');
+}
+
+function exportProjects() {
+  const blob = new Blob([JSON.stringify(Store.projects, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'pm_projects.json';
+  a.click();
+  toast('success', 'Projecten geëxporteerd');
+}
+
+function importProjects(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!Array.isArray(data)) { toast('error', 'Ongeldig formaat'); return; }
+      const existing = Store.projects || [];
+      const merged = [...existing];
+      let added = 0;
+      data.forEach(p => {
+        if (!p.name || !p.label) return;
+        if (merged.some(e => e.name === p.name)) return;
+        merged.push({ id: p.id || crypto.randomUUID(), ...p });
+        added++;
+      });
+      Store.projects = merged;
+      render();
+      toast('success', `${added} project(en) geïmporteerd`);
+    } catch { toast('error', 'Kon bestand niet lezen'); }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function clearActivity() {
+  Store.activity = [];
+  renderLog();
+  toast('info', 'Activiteitslog gewist');
+}
+
+// Load settings into form
+document.getElementById('setting-n8n-url').value = Store.ui.n8nBase || '';
+
+// ────────────────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────────────────
+render();
+</script>
 </body>
 </html>
