@@ -1,0 +1,85 @@
+{
+  "id": "D9p9wXEhC3YNvAl4",
+  "name": "Reset Project Session",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "createdAt": "2026-03-15T00:00:00.000Z",
+  "updatedAt": "2026-03-15T00:00:00.000Z",
+  "tags": [],
+  "nodes": [
+    {
+      "id": "wh-reset-01",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-200, 0],
+      "parameters": {
+        "path": "reset-project",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "ssh-reset-01",
+      "name": "Reset sessie",
+      "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1,
+      "position": [50, 0],
+      "parameters": {
+        "command": "=SESSION={{ $json.query.session }}; tmux kill-session -t $SESSION 2>/dev/null; rm -f /tmp/claude-rc-$SESSION.txt; pkill -f \"claude.*remote-control.*$SESSION\" 2>/dev/null; pkill -f \"claude.*--name.*$SESSION\" 2>/dev/null; echo 'reset done'"
+      },
+      "credentials": {
+        "sshPassword": {
+          "id": "OdKR4WxKZwBUMzZ5",
+          "name": "SSH Claude Code"
+        }
+      }
+    },
+    {
+      "id": "code-reset-01",
+      "name": "Maak bevestiging",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [300, 0],
+      "parameters": {
+        "jsCode": "const session = $('Webhook').item.json.query.session;\nreturn [{ json: { html: `<html><body><h2>Sessie '${session}' gereset.</h2><p>tmux sessie en Claude processen zijn gestopt. Je kunt nu opnieuw starten.</p></body></html>` } }];"
+      }
+    },
+    {
+      "id": "resp-reset-01",
+      "name": "Stuur bevestiging",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [550, 0],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "Reset sessie", "type": "main", "index": 0 }]]
+    },
+    "Reset sessie": {
+      "main": [[{ "node": "Maak bevestiging", "type": "main", "index": 0 }]]
+    },
+    "Maak bevestiging": {
+      "main": [[{ "node": "Stuur bevestiging", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

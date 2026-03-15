@@ -84,6 +84,7 @@
     .btn-create { background: #1a1a1a; color: #e8e8e8; border: 1px solid #333; }
     .btn-start  { background: #1a3a1a; color: #4caf50; border: 1px solid #2d5a2d; }
     .btn-stop   { background: #3a1a1a; color: #f44336; border: 1px solid #5a2d2d; }
+    .btn-reset  { background: #1a1a3a; color: #7c9fef; border: 1px solid #2d3d6a; }
     .btn-danger { background: #3a2a1a; color: #ff9800; border: 1px solid #5a3d1a; }
 
     .projects { display: grid; gap: 12px; max-width: 720px; }
@@ -727,6 +728,7 @@ claude --version      # moet werken</div>
           <div class="card-actions">
             <button class="btn btn-start" onclick="start('${p.name}', '${p.folder}')">🚀 Start</button>
             <button class="btn btn-stop" onclick="stop('${p.name}')">🛑 Stop</button>
+            <button class="btn btn-reset" onclick="reset('${p.name}')" title="Reset: kill tmux + claude processen">🔄 Reset</button>
             <button class="btn btn-danger" onclick="startDanger('${p.name}', '${p.folder}')" title="Start met --dangerously-skip-permissions">⚠️</button>
           </div>
         </div>
@@ -748,6 +750,16 @@ claude --version      # moet werken</div>
         toast(`✓ Sessie '${name}' gestopt`);
       } catch (e) {
         toast(`Stop '${name}' gestuurd`);
+      }
+    }
+
+    async function reset(name) {
+      toast(`Sessie '${name}' resetten...`);
+      try {
+        await fetch(`${N8N}/reset-project?session=${name}`);
+        toast(`✓ '${name}' gereset — klaar om opnieuw te starten`);
+      } catch (e) {
+        toast(`Reset '${name}' gestuurd`);
       }
     }
 

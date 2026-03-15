@@ -1,6 +1,15 @@
 {
   "workflows": [
     {
+      "id": "D9p9wXEhC3YNvAl4",
+      "name": "Reset Project Session",
+      "file": "workflows/D9p9wXEhC3YNvAl4__reset-project-session.json",
+      "active": false,
+      "webhook": "/webhook/reset-project?session=X",
+      "updatedAt": "2026-03-15T00:00:00.000Z",
+      "notes": "Na aanmaken: toggle uit/aan in n8n UI om webhook te registreren."
+    },
+    {
       "id": "O75vuWXjLj_4hAsuWPFji",
       "name": "Start Project Session",
       "file": "workflows/O75vuWXjLj__start-project-session.json",
