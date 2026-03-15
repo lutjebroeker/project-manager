@@ -734,11 +734,11 @@ claude --version      # moet werken</div>
     }
 
     function start(name, folder) {
-      window.location.href = `${N8N}/start-project?session=${name}&folder=${encodeURIComponent(folder)}`;
+      window.open(`${N8N}/start-project?session=${name}&folder=${encodeURIComponent(folder)}`, '_blank');
     }
 
     function startDanger(name, folder) {
-      window.location.href = `${N8N}/start-project?session=${name}&folder=${encodeURIComponent(folder)}&mode=dangerous`;
+      window.open(`${N8N}/start-project?session=${name}&folder=${encodeURIComponent(folder)}&mode=dangerous`, '_blank');
     }
 
     async function stop(name) {
@@ -754,7 +754,7 @@ claude --version      # moet werken</div>
     function newProject() {
       const name = document.getElementById('new-name').value.trim().toLowerCase().replace(/\s+/g, '-');
       if (!name) return;
-      window.location.href = `${N8N}/new-project?name=${encodeURIComponent(name)}`;
+      window.open(`${N8N}/new-project?name=${encodeURIComponent(name)}`, '_blank');
     }
 
     document.getElementById('new-name').addEventListener('keydown', e => {
