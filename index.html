@@ -633,6 +633,7 @@
     .field input:focus, .field select:focus { border-color: var(--border-focus); }
     .field input::placeholder { color: var(--text-4); }
     .field input.invalid { border-color: var(--red); }
+    .field input:disabled { opacity: 0.4; cursor: not-allowed; }
 
     .field select { cursor: pointer; }
     .field select option { background: var(--bg-elevated); }
@@ -965,9 +966,12 @@
       color: var(--text-2);
       padding: 14px 18px;
       line-height: 1.7;
-      white-space: pre;
+      white-space: pre-wrap;
       overflow-x: auto;
     }
+
+    details summary span:first-child { display: inline-block; transition: transform 0.15s; }
+    details[open] summary span:first-child { transform: rotate(90deg); }
 
     .todo-list { display: flex; flex-direction: column; gap: 6px; }
 
@@ -1016,7 +1020,7 @@
   </div>
 
   <div class="sidebar-bottom">
-    <button class="sidebar-icon-btn" title="Instellingen" onclick="showView('settings', document.getElementById('nav-settings'))">⚙</button>
+    <button class="sidebar-icon-btn" title="Instellingen" onclick="showView('settings', null)">⚙</button>
     <button class="sidebar-icon-btn" title="Sidebar inklappen / uitklappen" onclick="toggleSidebar()">◁</button>
   </div>
 </aside>
@@ -1226,7 +1230,7 @@ npm install -g @anthropic-ai/claude-code</div></div>
         <div class="settings-section">
           <h3>n8n verbinding</h3>
           <div class="field">
-            <label>n8n Webhook Base URL</label>
+            <label for="setting-n8n-url">n8n Webhook Base URL</label>
             <input type="text" id="setting-n8n-url" placeholder="https://n8n.jellespek.nl/webhook" />
             <span class="field-hint">Alle webhook calls gebruiken deze base URL.</span>
           </div>
@@ -1265,28 +1269,28 @@ npm install -g @anthropic-ai/claude-code</div></div>
     <div class="panel-body">
       <input type="hidden" id="panel-project-id" />
       <div class="field">
-        <label>Naam <span class="field-optional">(leesbaar)</span></label>
+        <label for="panel-label">Naam <span class="field-optional">(leesbaar)</span></label>
         <input type="text" id="panel-label" placeholder="Execution Engine" oninput="deriveSlug()" />
       </div>
       <div class="field">
-        <label>Slug <span class="field-optional">(tmux / GitHub naam)</span></label>
+        <label for="panel-name">Slug <span class="field-optional">(tmux / GitHub naam)</span></label>
         <input type="text" id="panel-name" placeholder="execution-engine" pattern="[a-z0-9\-]+" />
         <span class="field-hint">Alleen kleine letters, cijfers en koppeltekens. Niet aanpasbaar na aanmaken.</span>
       </div>
       <div class="field">
-        <label>Serverpad</label>
+        <label for="panel-folder">Serverpad</label>
         <input type="text" id="panel-folder" placeholder="/root/projects/execution-engine" />
       </div>
       <div class="field">
-        <label>GitHub URL <span class="field-optional">(optioneel)</span></label>
+        <label for="panel-github">GitHub URL <span class="field-optional">(optioneel)</span></label>
         <input type="text" id="panel-github" placeholder="https://github.com/lutjebroeker/project" />
       </div>
       <div class="field">
-        <label>Vercel URL <span class="field-optional">(optioneel)</span></label>
+        <label for="panel-vercel">Vercel URL <span class="field-optional">(optioneel)</span></label>
         <input type="text" id="panel-vercel" placeholder="https://project.vercel.app" />
       </div>
       <div class="field">
-        <label>Groep</label>
+        <label for="panel-group">Groep</label>
         <select id="panel-group">
           <option value="personal">Personal</option>
           <option value="clients">Clients</option>
@@ -1545,7 +1549,7 @@ function getTimer(id, status) {
   const entry = log.find(e => e.projectId === id && (e.action === 'start' || e.action === 'start_danger'));
   if (!entry) return 'actief';
   const mins = Math.floor((Date.now() - new Date(entry.timestamp)) / 60000);
-  if (mins < 1) return 'actief ~<1m';
+  if (mins < 1) return 'actief ~0m';
   if (mins < 60) return `actief ~${mins}m`;
   return `actief ~${Math.floor(mins/60)}u`;
 }
@@ -1578,7 +1582,19 @@ function relTime(iso) {
   return `${Math.floor(s/3600)}u`;
 }
 
-setInterval(() => { if (Store.activity.length) renderLog(); }, 30000);
+setInterval(() => {
+  if (Store.activity.length) renderLog();
+  // Update timer badges in-place to avoid resetting details open/closed state
+  const status = Store.status;
+  Object.entries(status).forEach(([id, s]) => {
+    if (s !== 'active') return;
+    const card = document.getElementById('card-' + id);
+    if (!card) return;
+    const timerEl = card.querySelector('.card-timer');
+    const newTimer = getTimer(id, s);
+    if (timerEl && newTimer) timerEl.textContent = newTimer;
+  });
+}, 30000);
 
 // ────────────────────────────────────────────────────────
 // ACTIONS
@@ -1592,7 +1608,7 @@ function actionStart(id) {
   Store.setStatus(id, 'connecting');
   Store.pushActivity({ projectId: id, projectName: p.label, action: 'start' });
   window.open(`${N8N()}/start-project?session=${encodeURIComponent(p.name)}&folder=${encodeURIComponent(p.folder)}`, '_blank');
-  setTimeout(() => { Store.setStatus(id, 'active'); render(); }, 2000);
+  setTimeout(() => { Store.setStatus(id, 'unknown'); render(); }, 5000);
   render();
   toast('success', `🚀 ${p.label} wordt gestart…`);
 }
@@ -1603,7 +1619,7 @@ function actionStartDanger(id) {
   Store.setStatus(id, 'connecting');
   Store.pushActivity({ projectId: id, projectName: p.label, action: 'start_danger' });
   window.open(`${N8N()}/start-project?session=${encodeURIComponent(p.name)}&folder=${encodeURIComponent(p.folder)}&mode=dangerous`, '_blank');
-  setTimeout(() => { Store.setStatus(id, 'active'); render(); }, 2000);
+  setTimeout(() => { Store.setStatus(id, 'unknown'); render(); }, 5000);
   render();
   toast('warning', `⚠️ ${p.label} gestart met skip-permissions`);
 }
@@ -1611,13 +1627,11 @@ function actionStartDanger(id) {
 function actionStop(id) {
   const p = getProject(id);
   if (!p) return;
-  confirm(`🛑 ${p.label} stoppen?`, 'De tmux sessie wordt gestopt en de temp file verwijderd.', 'Stoppen', () => {
-    Store.setStatus(id, 'stopped');
-    Store.pushActivity({ projectId: id, projectName: p.label, action: 'stop' });
-    window.open(`${N8N()}/stop-project?session=${encodeURIComponent(p.name)}`, '_blank');
-    render();
-    toast('info', `🛑 ${p.label} gestopt`);
-  });
+  Store.setStatus(id, 'stopped');
+  Store.pushActivity({ projectId: id, projectName: p.label, action: 'stop' });
+  window.open(`${N8N()}/stop-project?session=${encodeURIComponent(p.name)}`, '_blank');
+  render();
+  toast('info', `🛑 ${p.label} gestopt`);
 }
 
 function actionRestart(id) {
@@ -1631,7 +1645,7 @@ function actionRestart(id) {
   setTimeout(() => {
     Store.setStatus(id, 'connecting');
     window.open(`${N8N()}/start-project?session=${encodeURIComponent(p.name)}&folder=${encodeURIComponent(p.folder)}`, '_blank');
-    setTimeout(() => { Store.setStatus(id, 'active'); render(); }, 2000);
+    setTimeout(() => { Store.setStatus(id, 'unknown'); render(); }, 5000);
     render();
   }, 700);
 }
@@ -1662,7 +1676,7 @@ function actionBuild(id) {
   Store.setStatus(id, 'connecting');
   Store.pushActivity({ projectId: id, projectName: p.label, action: 'build' });
   window.open(`${N8N()}/build-task?project=${encodeURIComponent(p.name)}&folder=${encodeURIComponent(p.folder)}`, '_blank');
-  setTimeout(() => { Store.setStatus(id, 'active'); render(); }, 2000);
+  setTimeout(() => { Store.setStatus(id, 'unknown'); render(); }, 5000);
   render();
   toast('success', `✅ Bouw gestart voor ${p.label}`);
 }
@@ -1673,7 +1687,7 @@ function actionNewRepo(id) {
   Store.setStatus(id, 'connecting');
   Store.pushActivity({ projectId: id, projectName: p.label, action: 'project_create' });
   window.open(`${N8N()}/new-project?name=${encodeURIComponent(p.name)}`, '_blank');
-  setTimeout(() => { Store.setStatus(id, 'active'); render(); }, 2000);
+  setTimeout(() => { Store.setStatus(id, 'unknown'); render(); }, 5000);
   render();
   toast('success', `🔨 GitHub repo aanmaken voor ${p.label}…`);
 }
@@ -1764,6 +1778,15 @@ function openPanel() {
 function closePanel() {
   document.getElementById('panel-overlay').classList.remove('open');
   document.getElementById('project-panel').classList.remove('open');
+  document.getElementById('panel-project-id').value = '';
+  document.getElementById('panel-label').value = '';
+  document.getElementById('panel-name').value = '';
+  document.getElementById('panel-name').disabled = false;
+  document.getElementById('panel-folder').value = '';
+  document.getElementById('panel-github').value = '';
+  document.getElementById('panel-vercel').value = '';
+  document.getElementById('panel-group').value = 'personal';
+  slugEdited = false;
 }
 
 function closePanelOnOverlay(e) {
@@ -1789,6 +1812,7 @@ function saveProject() {
 
   if (!label || !name || !folder) { toast('error', 'Vul naam, slug en serverpad in.'); return; }
   if (!/^[a-z0-9-]+$/.test(name)) { toast('error', 'Slug mag alleen kleine letters, cijfers en koppeltekens bevatten.'); return; }
+  if (!folder.startsWith('/')) { toast('error', 'Serverpad moet beginnen met /'); return; }
 
   const projects = Store.projects || [];
 
@@ -1906,7 +1930,8 @@ function buildPaletteItems() {
   items.push({ group: 'Beheer', icon: '⊞', label: 'Project toevoegen', sub: '', action: () => { closePalette(); openAddPanel(); } });
   items.push({ group: 'Beheer', icon: '⎙', label: 'Open Docs', sub: '', action: () => { closePalette(); showView('docs', document.getElementById('nav-docs')); } });
   items.push({ group: 'Beheer', icon: '⚙', label: 'Instellingen', sub: '', action: () => { closePalette(); showView('settings', null); } });
-  items.push({ group: 'Beheer', icon: '🔗', label: 'Open n8n', sub: Store.getN8N().replace('/webhook',''), action: () => window.open(Store.getN8N().replace('/webhook',''), '_blank') });
+  const n8nHost = (() => { try { return new URL(Store.getN8N()).origin; } catch { return Store.getN8N(); } })();
+  items.push({ group: 'Beheer', icon: '🔗', label: 'Open n8n', sub: n8nHost, action: () => window.open(n8nHost, '_blank') });
 
   return items;
 }
@@ -1938,29 +1963,31 @@ function filterPalette() {
 
 function renderPaletteResults(items) {
   const el = document.getElementById('palette-results');
-  if (items.length === 0) { el.innerHTML = '<div class="palette-empty">Geen resultaten</div>'; return; }
+  if (items.length === 0) { el.innerHTML = '<div class="palette-empty">Geen resultaten</div>'; el._items = []; return; }
   const grouped = {};
   items.forEach(item => {
     if (!grouped[item.group]) grouped[item.group] = [];
     grouped[item.group].push(item);
   });
+  const orderedItems = [];
   let html = '';
+  let flatIdx = 0;
   Object.entries(grouped).forEach(([group, groupItems]) => {
     html += `<div class="palette-group-label">${group}</div>`;
-    groupItems.forEach((item, i) => {
-      const globalIdx = items.indexOf(item);
-      html += `<div class="palette-item ${globalIdx === _paletteSelected ? 'selected' : ''}" onmouseenter="selectPaletteItem(${globalIdx})" onclick="executePaletteItem(${globalIdx})">
+    groupItems.forEach(item => {
+      orderedItems.push(item);
+      html += `<div class="palette-item ${flatIdx === _paletteSelected ? 'selected' : ''}" onmouseenter="selectPaletteItem(${flatIdx})" onclick="executePaletteItem(${flatIdx})">
         <div class="palette-item-icon">${item.icon}</div>
         <div class="palette-item-text">
           <div class="palette-item-label">${esc(item.label)}</div>
           ${item.sub ? `<div class="palette-item-sub">${esc(item.sub)}</div>` : ''}
         </div>
       </div>`;
+      flatIdx++;
     });
   });
   el.innerHTML = html;
-  // Re-attach filtered items list for keyboard nav
-  el._items = items;
+  el._items = orderedItems;
 }
 
 function selectPaletteItem(idx) {
@@ -2026,7 +2053,7 @@ function copyText(text, el) {
     } else {
       toast('success', 'Gekopieerd naar klembord');
     }
-  });
+  }).catch(() => toast('error', 'Klembord niet beschikbaar'));
 }
 
 // ────────────────────────────────────────────────────────
@@ -2034,6 +2061,10 @@ function copyText(text, el) {
 // ────────────────────────────────────────────────────────
 function saveSettings() {
   const url = document.getElementById('setting-n8n-url').value.trim();
+  if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+    toast('error', 'URL moet beginnen met http:// of https://');
+    return;
+  }
   const ui = Store.ui;
   if (url) ui.n8nBase = url;
   else delete ui.n8nBase;
