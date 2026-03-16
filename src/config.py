@@ -11,8 +11,15 @@ class Settings(BaseSettings):
     business_context_path: str = "data/business_context.json"
     obsidian_vault_path: str = ""
     api_token: str = ""  # Auto-gegenereerd als leeg
-    # Claude Agent SDK gebruikt Claude Code CLI auth (Max abonnement)
-    # Geen API key nodig — zorg dat `claude login` is gedaan
+
+    # LLM Provider config — instelbaar, niet meer gebonden aan één provider
+    # Opties: "claude_sdk" (default), "anthropic", "openai", "ollama"
+    llm_provider: str = "claude_sdk"
+    llm_model: str = ""  # Leeg = provider default
+    anthropic_api_key: str = ""
+    openai_api_key: str = ""
+    openai_base_url: str = ""  # Voor OpenRouter, Together, etc.
+    ollama_base_url: str = "http://localhost:11434"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

@@ -1,6 +1,6 @@
 """Marketing & Content agent — generates social media posts, blog outlines, and content plans."""
 
-from claude_agent_sdk import tool
+from src.agents.compat import tool
 
 from src.agents.base import BaseAgent
 

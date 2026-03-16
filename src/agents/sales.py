@@ -3,7 +3,7 @@
 import json
 from datetime import datetime
 
-from claude_agent_sdk import tool
+from src.agents.compat import tool
 
 from src.agents.base import BaseAgent
 

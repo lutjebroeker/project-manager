@@ -23,20 +23,25 @@ def mock_settings(tmp_path):
         "DATABASE_PATH": db_path,
         "BUSINESS_CONTEXT_PATH": biz_path,
         "OBSIDIAN_VAULT_PATH": "",
+        "LLM_PROVIDER": "ollama",
+        "API_TOKEN": "test-token-123",
     }):
         # Force re-import with new settings
         import importlib
         import src.config
         importlib.reload(src.config)
 
-        # Patch de agents zodat ze geen Claude SDK nodig hebben
-        with patch("src.agents.base.ClaudeSDKClient"):
-            import src.api.routes
-            importlib.reload(src.api.routes)
+        # Reset cached auth token zodat de nieuwe API_TOKEN wordt opgepikt
+        import src.api.auth
+        src.api.auth._token = None
+        importlib.reload(src.api.auth)
 
-            from src.main import app
-            client = TestClient(app)
-            yield client
+        import src.api.routes
+        importlib.reload(src.api.routes)
+
+        from src.main import app
+        client = TestClient(app, headers={"Authorization": "Bearer test-token-123"})
+        yield client
 
 
 class TestHealthEndpoint:

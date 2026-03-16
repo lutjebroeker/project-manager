@@ -1,22 +1,15 @@
-"""Base agent class wrapping Claude Agent SDK with versioning and learning."""
+"""Base agent class with pluggable LLM provider, versioning and learning."""
 
 import json
 from pathlib import Path
 
 import anyio
-from claude_agent_sdk import (
-    ClaudeSDKClient,
-    ClaudeAgentOptions,
-    AssistantMessage,
-    ResultMessage,
-    TextBlock,
-    tool,
-    create_sdk_mcp_server,
-)
 
 from src.config import load_business_context, settings
 from src.memory.store import MemoryStore
 from src.learning.knowledge_base import KnowledgeBase
+from src.providers import get_provider, LLMProvider
+from src.providers.registry import get_default_model
 
 
 class BaseAgent:
@@ -30,23 +23,49 @@ class BaseAgent:
     5. Nieuwe voorkeuren worden opgeslagen (agent-specifiek + globaal)
     6. CLAUDE.md wordt gesynct zodat je hele Claude omgeving meegroeit
     7. Prompt versie wordt bijgehouden voor rollback
+
+    Provider is instelbaar via LLM_PROVIDER env var of constructor parameter.
+    Ondersteunde providers: anthropic, openai, ollama, claude_sdk
     """
 
     name: str = "base"
     description: str = "Base agent"
     system_prompt: str = ""
 
-    # Default model — Max abonnement ondersteunt alle modellen
-    model: str = "claude-sonnet-4-6"  # Goede balans snelheid/kwaliteit
+    # Default model — wordt overschreven door LLM_MODEL env var of provider default
+    model: str = ""
 
-    def __init__(self, memory: MemoryStore | None = None, model: str | None = None):
+    def __init__(
+        self,
+        memory: MemoryStore | None = None,
+        model: str | None = None,
+        provider: LLMProvider | str | None = None,
+    ):
         self.memory = memory or MemoryStore(settings.database_path)
         self.kb = KnowledgeBase(self.memory)
         self.business_context = load_business_context()
+
+        # Provider setup — string, instance, of default uit env
+        if isinstance(provider, str):
+            self._provider = get_provider(provider)
+        elif isinstance(provider, LLMProvider):
+            self._provider = provider
+        else:
+            self._provider = get_provider()  # Uit LLM_PROVIDER env var
+
+        # Model: expliciet > env var > provider default
         if model:
             self.model = model
+        elif not self.model:
+            self.model = get_default_model()
+
         # Registreer initiële prompt versie als die er nog niet is
         self._ensure_prompt_version()
+
+    @property
+    def provider(self) -> LLMProvider:
+        """Huidige LLM provider."""
+        return self._provider
 
     def _ensure_prompt_version(self) -> None:
         """Zorg dat er een prompt versie in de DB staat."""
@@ -116,12 +135,64 @@ class BaseAgent:
         """Override in subclasses to provide custom MCP tools."""
         return []
 
+    def _get_tool_definitions(self) -> list[dict]:
+        """Converteer agent tools naar provider-agnostisch format.
+
+        Subclasses die tools definiëren moeten _get_tools() overriden.
+        Voor claude_sdk provider worden die tools als MCP tools gebruikt.
+        Voor andere providers worden ze als function definitions meegegeven.
+        """
+        # Default: geen tools in provider-agnostische modus
+        # Subclasses kunnen dit overriden om tool schemas te bieden
+        return []
+
     def _get_allowed_tools(self) -> list[str]:
-        """Built-in tools this agent can use."""
+        """Built-in tools this agent can use (alleen relevant voor claude_sdk provider)."""
         return ["Read", "WebSearch", "WebFetch"]
 
     async def run(self, prompt: str, max_turns: int = 10) -> str:
-        """Run the agent with a prompt and return the result."""
+        """Run the agent with a prompt and return the result.
+
+        Werkt met elke geconfigureerde provider:
+        - claude_sdk: volledige Agent SDK met MCP tools
+        - anthropic/openai: direct API calls met tool calling
+        - ollama: lokale modellen, tools via prompt engineering
+        """
+        from src.providers.claude_sdk_provider import ClaudeSDKProvider
+
+        if isinstance(self._provider, ClaudeSDKProvider):
+            result_text = await self._run_with_claude_sdk(prompt, max_turns)
+        else:
+            result_text = await self._run_with_provider(prompt, max_turns)
+
+        # Log the action — return log_id zodat feedback gekoppeld kan worden
+        self.memory.log_action(
+            agent=self.name,
+            action="run",
+            input_data=prompt[:500],
+            output_data=result_text[:1000],
+        )
+
+        # Auto-learn check: als er genoeg nieuwe feedback is, leer automatisch
+        if self.kb.should_auto_learn(self.name):
+            try:
+                await self.learn_from_feedback()
+            except Exception:
+                pass  # Learning failure mag run niet blokkeren
+
+        return result_text
+
+    async def _run_with_claude_sdk(self, prompt: str, max_turns: int) -> str:
+        """Run via Claude Agent SDK — meest capabele modus met MCP tools."""
+        from claude_agent_sdk import (
+            ClaudeSDKClient,
+            ClaudeAgentOptions,
+            AssistantMessage,
+            ResultMessage,
+            TextBlock,
+            create_sdk_mcp_server,
+        )
+
         custom_tools = self._get_tools()
 
         options_kwargs = {
@@ -151,22 +222,29 @@ class BaseAgent:
                 elif isinstance(message, ResultMessage):
                     result_text = message.result or result_text
 
-        # Log the action — return log_id zodat feedback gekoppeld kan worden
-        log_id = self.memory.log_action(
-            agent=self.name,
-            action="run",
-            input_data=prompt[:500],
-            output_data=result_text[:1000],
-        )
-
-        # Auto-learn check: als er genoeg nieuwe feedback is, leer automatisch
-        if self.kb.should_auto_learn(self.name):
-            try:
-                await self.learn_from_feedback()
-            except Exception:
-                pass  # Learning failure mag run niet blokkeren
-
         return result_text
+
+    async def _run_with_provider(self, prompt: str, max_turns: int) -> str:
+        """Run via provider-agnostische API (Anthropic, OpenAI, Ollama)."""
+        system_prompt = self._build_system_prompt()
+        tool_defs = self._get_tool_definitions()
+
+        if tool_defs and self._provider.supports_tools():
+            response = await self._provider.complete_with_tools(
+                system_prompt=system_prompt,
+                user_prompt=prompt,
+                tools=tool_defs,
+                model=self.model,
+                max_turns=max_turns,
+            )
+        else:
+            response = await self._provider.complete(
+                system_prompt=system_prompt,
+                user_prompt=prompt,
+                model=self.model,
+            )
+
+        return response.text
 
     async def run_with_tracking(self, prompt: str, max_turns: int = 10) -> dict:
         """Run the agent and return result + log_id voor feedback tracking."""
@@ -181,7 +259,7 @@ class BaseAgent:
 
         Dit is de kern van het zelflerende systeem:
         1. Haal positieve en negatieve feedback op
-        2. Laat Claude de patronen analyseren
+        2. Laat de LLM de patronen analyseren
         3. Sla geleerde voorkeuren op
         4. Update confidence scores van bestaande voorkeuren
         """
@@ -240,25 +318,17 @@ Regels:
 - Return ALLEEN de JSON array, geen extra tekst
 """
 
-        # Draai een tijdelijke agent voor de analyse
-        options = ClaudeAgentOptions(
-            allowed_tools=[],
-            system_prompt="Je bent een feedback analyst. Je analyseert patronen in feedback en extraheert concrete voorkeuren. Antwoord ALLEEN met een JSON array.",
-            max_turns=1,
-            model=self.model,
-            permission_mode="bypassPermissions",
+        # Gebruik dezelfde provider voor analyse — geen aparte SDK nodig
+        analyst_prompt = (
+            "Je bent een feedback analyst. Je analyseert patronen in feedback "
+            "en extraheert concrete voorkeuren. Antwoord ALLEEN met een JSON array."
         )
-
-        result_text = ""
-        async with ClaudeSDKClient(options=options) as client:
-            await client.query(analysis_prompt)
-            async for message in client.receive_response():
-                if isinstance(message, AssistantMessage):
-                    for block in message.content:
-                        if isinstance(block, TextBlock):
-                            result_text += block.text
-                elif isinstance(message, ResultMessage):
-                    result_text = message.result or result_text
+        response = await self._provider.complete(
+            system_prompt=analyst_prompt,
+            user_prompt=analysis_prompt,
+            model=self.model,
+        )
+        result_text = response.text
 
         # Parse de JSON response
         try:
@@ -354,6 +424,8 @@ Regels:
             "feedback_stats": stats,
             "learned_preferences": len(prefs),
             "version_history": history,
+            "provider": self._provider.name,
+            "model": self.model,
         }
 
     def run_sync(self, prompt: str, max_turns: int = 10) -> str:
