@@ -6,6 +6,8 @@ from pydantic import BaseModel
 from src.orchestrator import Orchestrator
 from src.agents.marketing import MarketingAgent
 from src.agents.sales import SalesAgent
+from src.agents.finance import FinanceAgent
+from src.agents.planning import PlanningAgent
 from src.memory.store import MemoryStore
 from src.config import settings
 
@@ -16,6 +18,8 @@ memory = MemoryStore(settings.database_path)
 orchestrator = Orchestrator()
 orchestrator.register(MarketingAgent(memory=memory))
 orchestrator.register(SalesAgent(memory=memory))
+orchestrator.register(FinanceAgent(memory=memory))
+orchestrator.register(PlanningAgent(memory=memory))
 
 
 class PromptRequest(BaseModel):
@@ -140,6 +144,133 @@ async def get_leads():
     existing = memory.recall("sales", "leads")
     leads = json.loads(existing) if existing else []
     return {"leads": leads}
+
+
+# --- Finance shortcuts ---
+
+
+class InvoiceRequest(BaseModel):
+    client_name: str
+    description: str
+    hours: float | None = None
+    fixed_amount: float | None = None
+    service_type: str = "AI Implementatie"
+
+
+class TimeLogRequest(BaseModel):
+    client: str
+    hours: float
+    description: str
+    project: str = "Algemeen"
+
+
+class FinanceReportRequest(BaseModel):
+    period: str = "current_month"
+
+
+@router.post("/agent/finance/invoice")
+async def generate_invoice(request: InvoiceRequest):
+    agent = orchestrator.get_agent("finance")
+    result = await agent.generate_invoice(
+        request.client_name,
+        request.description,
+        request.hours,
+        request.fixed_amount,
+        request.service_type,
+    )
+    return {"result": result}
+
+
+@router.post("/agent/finance/log-hours")
+async def log_hours(request: TimeLogRequest):
+    agent = orchestrator.get_agent("finance")
+    result = await agent.log_time(
+        request.client, request.hours, request.description, request.project
+    )
+    return {"result": result}
+
+
+@router.post("/agent/finance/report")
+async def financial_report(request: FinanceReportRequest):
+    agent = orchestrator.get_agent("finance")
+    result = await agent.financial_report(request.period)
+    return {"result": result}
+
+
+@router.get("/agent/finance/invoices")
+async def get_invoices():
+    import json
+    existing = memory.recall("finance", "invoices")
+    invoices = json.loads(existing) if existing else []
+    return {"invoices": invoices}
+
+
+@router.get("/agent/finance/hours")
+async def get_hours(client: str | None = None, month: str | None = None):
+    import json
+    existing = memory.recall("finance", "hours_log")
+    hours_log = json.loads(existing) if existing else []
+    if client:
+        hours_log = [h for h in hours_log if h["client"].lower() == client.lower()]
+    if month:
+        hours_log = [h for h in hours_log if h["date"].startswith(month)]
+    total = sum(h["hours"] for h in hours_log)
+    return {"hours": hours_log, "total_hours": total}
+
+
+# --- Planning shortcuts ---
+
+
+class WeekPlanRequest(BaseModel):
+    goals: str | None = None
+
+
+class DayPlanRequest(BaseModel):
+    focus: str | None = None
+
+
+class AddTasksRequest(BaseModel):
+    tasks: str
+
+
+@router.post("/agent/planning/week-plan")
+async def create_week_plan(request: WeekPlanRequest):
+    agent = orchestrator.get_agent("planning")
+    result = await agent.create_week_plan(request.goals)
+    return {"result": result}
+
+
+@router.post("/agent/planning/day-plan")
+async def create_day_plan(request: DayPlanRequest):
+    agent = orchestrator.get_agent("planning")
+    result = await agent.create_day_plan(request.focus)
+    return {"result": result}
+
+
+@router.post("/agent/planning/add-tasks")
+async def add_tasks(request: AddTasksRequest):
+    agent = orchestrator.get_agent("planning")
+    result = await agent.add_tasks(request.tasks)
+    return {"result": result}
+
+
+@router.post("/agent/planning/prioritize")
+async def prioritize_tasks():
+    agent = orchestrator.get_agent("planning")
+    result = await agent.prioritize()
+    return {"result": result}
+
+
+@router.get("/agent/planning/tasks")
+async def get_tasks(status: str | None = None, project: str | None = None):
+    import json
+    existing = memory.recall("planning", "tasks")
+    tasks = json.loads(existing) if existing else []
+    if status:
+        tasks = [t for t in tasks if t["status"] == status]
+    if project:
+        tasks = [t for t in tasks if t["project"].lower() == project.lower()]
+    return {"tasks": tasks}
 
 
 # --- Status & logs ---
