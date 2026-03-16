@@ -4,6 +4,7 @@ import uvicorn
 from fastapi import FastAPI
 
 from src.api.routes import router
+from src.api.webhooks import webhook_router
 from src.config import settings
 
 app = FastAPI(
@@ -13,6 +14,7 @@ app = FastAPI(
 )
 
 app.include_router(router, prefix="/api")
+app.include_router(webhook_router)
 
 
 @app.get("/")
