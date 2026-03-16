@@ -25,9 +25,14 @@ class BaseAgent:
     description: str = "Base agent"
     system_prompt: str = ""
 
-    def __init__(self, memory: MemoryStore | None = None):
+    # Default model — Max abonnement ondersteunt alle modellen
+    model: str = "claude-sonnet-4-6"  # Goede balans snelheid/kwaliteit
+
+    def __init__(self, memory: MemoryStore | None = None, model: str | None = None):
         self.memory = memory or MemoryStore(settings.database_path)
         self.business_context = load_business_context()
+        if model:
+            self.model = model
 
     def _build_system_prompt(self) -> str:
         """Combine agent system prompt with business context."""
@@ -59,6 +64,8 @@ class BaseAgent:
             "allowed_tools": self._get_allowed_tools(),
             "system_prompt": self._build_system_prompt(),
             "max_turns": max_turns,
+            "model": self.model,
+            "permission_mode": "bypassPermissions",
         }
 
         if custom_tools:
