@@ -10,12 +10,12 @@
       --bg-surface:    #111111;
       --bg-elevated:   #161616;
       --bg-input:      #0d0d0d;
-      --border:        #1e1e1e;
-      --border-focus:  #3a3a3a;
+      --border:        #2a2a2a;
+      --border-focus:  #4a4a4a;
       --text:          #e8e8e8;
-      --text-2:        #888888;
-      --text-3:        #555555;
-      --text-4:        #333333;
+      --text-2:        #9a9a9a;
+      --text-3:        #717171;
+      --text-4:        #5a5a5a;
       --accent:        #5b6af0;
       --accent-dim:    #1a1d4a;
       --green:         #4caf50;
@@ -154,7 +154,7 @@
     }
 
     .log-header {
-      font-size: 0.68rem;
+      font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -193,7 +193,7 @@
     }
 
     .log-project {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 500;
       color: var(--text-2);
       white-space: nowrap;
@@ -202,7 +202,7 @@
     }
 
     .log-action {
-      font-size: 0.68rem;
+      font-size: 0.75rem;
       color: var(--text-4);
       white-space: nowrap;
       overflow: hidden;
@@ -210,7 +210,7 @@
     }
 
     .log-time {
-      font-size: 0.65rem;
+      font-size: 0.73rem;
       color: var(--text-4);
       flex-shrink: 0;
       margin-top: 2px;
@@ -279,7 +279,7 @@
       display: flex;
       align-items: center;
       gap: 4px;
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       color: var(--text-4);
       cursor: pointer;
       padding: 4px 8px;
@@ -321,7 +321,7 @@
     }
 
     .btn:hover { opacity: 0.82; }
-    .btn:disabled { opacity: 0.35; cursor: default; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
 
     .btn-primary  { background: var(--accent); color: white; border-color: var(--accent); }
     .btn-ghost    { background: var(--bg-surface); color: var(--text-2); border-color: var(--border); }
@@ -407,7 +407,7 @@
     }
 
     .card-timer {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: var(--green);
       background: var(--green-dim);
       border: 1px solid var(--green-border);
@@ -432,7 +432,7 @@
       align-items: center;
       gap: 4px;
       font-family: var(--mono);
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: var(--text-4);
       cursor: pointer;
       padding: 2px 6px;
@@ -500,7 +500,7 @@
     .task-row input::placeholder { color: var(--text-4); }
 
     .task-hint {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: var(--text-4);
       white-space: nowrap;
     }
@@ -612,7 +612,7 @@
     }
 
     .field-optional {
-      font-size: 0.68rem;
+      font-size: 0.75rem;
       color: var(--text-4);
       font-weight: 400;
     }
@@ -633,13 +633,13 @@
     .field input:focus, .field select:focus { border-color: var(--border-focus); }
     .field input::placeholder { color: var(--text-4); }
     .field input.invalid { border-color: var(--red); }
-    .field input:disabled { opacity: 0.4; cursor: not-allowed; }
+    .field input:disabled { opacity: 0.55; cursor: not-allowed; }
 
     .field select { cursor: pointer; }
     .field select option { background: var(--bg-elevated); }
 
     .field-hint {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       color: var(--text-4);
     }
 
@@ -728,7 +728,7 @@
     .palette-input::placeholder { color: var(--text-4); }
 
     .palette-esc {
-      font-size: 0.68rem;
+      font-size: 0.75rem;
       color: var(--text-4);
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
@@ -746,7 +746,7 @@
     .palette-results::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
     .palette-group-label {
-      font-size: 0.68rem;
+      font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -783,7 +783,7 @@
     }
 
     .palette-item-sub {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       color: var(--text-3);
     }
 
@@ -798,7 +798,7 @@
     .settings-section { margin-bottom: 24px; }
 
     .settings-section h3 {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.07em;
       text-transform: uppercase;
@@ -889,7 +889,7 @@
     .docs-section { margin-bottom: 44px; }
 
     .docs-section h2 {
-      font-size: 0.72rem;
+      font-size: 0.75rem;
       font-weight: 600;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -901,7 +901,7 @@
 
     .docs-section p {
       font-size: 0.875rem;
-      color: #aaa;
+      color: #bbb;
       line-height: 1.6;
       margin-bottom: 10px;
     }
@@ -940,7 +940,7 @@
     }
 
     .link-card:hover { border-color: #333; }
-    .link-card-label { font-size: 0.68rem; color: var(--text-4); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 3px; }
+    .link-card-label { font-size: 0.75rem; color: var(--text-4); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 3px; }
     .link-card-name { font-size: 0.85rem; color: var(--text); font-weight: 500; }
 
     .wf-list { display: flex; flex-direction: column; gap: 8px; }
@@ -951,7 +951,7 @@
 
     .wf-name { font-size: 0.875rem; font-weight: 600; }
 
-    .wf-badge { font-size: 0.68rem; padding: 2px 7px; border-radius: var(--radius-sm); background: var(--green-dim); color: var(--green); }
+    .wf-badge { font-size: 0.75rem; padding: 2px 7px; border-radius: var(--radius-sm); background: var(--green-dim); color: var(--green); }
 
     .wf-webhook { font-family: var(--mono); font-size: 0.75rem; color: var(--text-3); margin-bottom: 4px; word-break: break-all; }
 
@@ -1506,7 +1506,7 @@ function render() {
     if (!grouped[group]) return;
     const isArchived = group === 'archived';
     html += `<details ${isArchived ? '' : 'open'} style="margin-bottom:4px">
-      <summary style="cursor:pointer;font-size:0.72rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-4);padding:8px 4px;list-style:none;display:flex;align-items:center;gap:8px;user-select:none;">
+      <summary style="cursor:pointer;font-size:0.75rem;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-4);padding:8px 4px;list-style:none;display:flex;align-items:center;gap:8px;user-select:none;">
         <span style="color:var(--text-4);font-size:10px">▶</span> ${GROUP_LABELS[group]} <span style="color:var(--text-4);font-weight:400">(${grouped[group].length})</span>
       </summary>
       <div style="display:flex;flex-direction:column;gap:10px;padding-top:8px">`;
