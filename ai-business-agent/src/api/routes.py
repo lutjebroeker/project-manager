@@ -273,6 +273,132 @@ async def get_tasks(status: str | None = None, project: str | None = None):
     return {"tasks": tasks}
 
 
+# --- Feedback & Learning ---
+
+
+class FeedbackRequest(BaseModel):
+    log_id: int
+    rating: int  # -1 (slecht), 0 (neutraal), 1 (goed)
+    comment: str = ""
+    tags: list[str] | None = None
+
+
+class UpdatePromptRequest(BaseModel):
+    new_prompt: str
+    reason: str
+
+
+@router.post("/agent/{agent_name}/feedback")
+async def add_feedback(agent_name: str, request: FeedbackRequest):
+    """Geef feedback op een agent output. Dit voedt het zelflerende systeem."""
+    if request.rating not in (-1, 0, 1):
+        raise HTTPException(status_code=400, detail="Rating moet -1, 0, of 1 zijn")
+    feedback_id = memory.add_feedback(
+        log_id=request.log_id,
+        agent=agent_name,
+        rating=request.rating,
+        comment=request.comment,
+        tags=request.tags,
+    )
+    return {"feedback_id": feedback_id, "message": "Feedback opgeslagen"}
+
+
+@router.post("/agent/{agent_name}/learn")
+async def trigger_learning(agent_name: str):
+    """Trigger de learning loop: analyseer feedback en leer voorkeuren."""
+    try:
+        agent = orchestrator.get_agent(agent_name)
+        result = await agent.learn_from_feedback()
+        return {"agent": agent_name, "result": result}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/agent/{agent_name}/feedback/stats")
+async def get_feedback_stats(agent_name: str):
+    """Haal feedback statistieken op."""
+    stats = memory.get_feedback_stats(agent_name)
+    return {"agent": agent_name, "stats": stats}
+
+
+@router.get("/agent/{agent_name}/feedback")
+async def get_feedback(agent_name: str, limit: int = 20):
+    """Haal recente feedback op."""
+    feedback = memory.get_recent_feedback(agent_name, limit=limit)
+    return {"agent": agent_name, "feedback": feedback}
+
+
+@router.get("/agent/{agent_name}/preferences")
+async def get_preferences(agent_name: str):
+    """Haal geleerde voorkeuren op."""
+    prefs = memory.get_active_preferences(agent_name)
+    return {"agent": agent_name, "preferences": prefs}
+
+
+@router.delete("/agent/{agent_name}/preferences/{pref_id}")
+async def deactivate_preference(agent_name: str, pref_id: int):
+    """Deactiveer een geleerde voorkeur (als die niet klopt)."""
+    memory.deactivate_preference(pref_id)
+    return {"message": f"Voorkeur {pref_id} gedeactiveerd"}
+
+
+# --- Versioning ---
+
+
+@router.get("/agent/{agent_name}/versions")
+async def get_versions(agent_name: str):
+    """Haal prompt versie geschiedenis op."""
+    try:
+        agent = orchestrator.get_agent(agent_name)
+        return agent.get_version_info()
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/agent/{agent_name}/versions/{version}")
+async def get_prompt_version(agent_name: str, version: int):
+    """Haal een specifieke prompt versie op (inclusief de prompt tekst)."""
+    history = memory.get_prompt_history(agent_name)
+    for v in history:
+        if v["version"] == version:
+            return v
+    raise HTTPException(status_code=404, detail=f"Versie {version} niet gevonden")
+
+
+@router.post("/agent/{agent_name}/versions/rollback/{version}")
+async def rollback_version(agent_name: str, version: int):
+    """Rollback naar een eerdere prompt versie."""
+    success = memory.rollback_prompt(agent_name, version)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Versie {version} niet gevonden")
+    return {"message": f"Agent '{agent_name}' teruggezet naar versie {version}"}
+
+
+@router.post("/agent/{agent_name}/versions/update")
+async def update_prompt(agent_name: str, request: UpdatePromptRequest):
+    """Update de system prompt (maakt automatisch een nieuwe versie aan)."""
+    try:
+        agent = orchestrator.get_agent(agent_name)
+        version = await agent.update_system_prompt(request.new_prompt, request.reason)
+        return {"agent": agent_name, "new_version": version, "reason": request.reason}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+# --- Tracking endpoint (run + log_id voor feedback) ---
+
+
+@router.post("/agent/{agent_name}/run-tracked")
+async def run_agent_tracked(agent_name: str, request: PromptRequest):
+    """Run een agent en return ook het log_id voor feedback koppeling."""
+    try:
+        agent = orchestrator.get_agent(agent_name)
+        result = await agent.run_with_tracking(request.prompt, request.max_turns)
+        return {"agent": agent_name, **result}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 # --- Status & logs ---
 
 
