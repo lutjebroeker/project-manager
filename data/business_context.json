@@ -1,0 +1,45 @@
+{
+  "bedrijf": {
+    "naam": "Jelle Spek Consultancy",
+    "type": "Consultancy / Advies",
+    "beschrijving": "AI en technologie advies voor bedrijven",
+    "website": "https://jellespek.nl",
+    "taal": "nl"
+  },
+  "diensten": [
+    {
+      "naam": "AI Strategie Advies",
+      "beschrijving": "Bedrijven helpen met het inzetten van AI voor hun processen",
+      "doelgroep": "MKB en enterprise"
+    },
+    {
+      "naam": "AI Implementatie",
+      "beschrijving": "Hands-on implementatie van AI oplossingen",
+      "doelgroep": "Bedrijven die al een AI strategie hebben"
+    }
+  ],
+  "tone_of_voice": {
+    "stijl": "Professioneel maar toegankelijk, niet te formeel",
+    "taal": "Nederlands, technisch maar begrijpelijk",
+    "vermijd": ["corporate jargon", "hype", "buzzwords zonder uitleg"]
+  },
+  "doelgroep": {
+    "primair": "CTO's en tech leads bij MKB",
+    "secundair": "Ondernemers die AI willen inzetten",
+    "pijnpunten": [
+      "Weten niet waar te beginnen met AI",
+      "Hebben geen interne AI expertise",
+      "Willen ROI zien, geen experimenten"
+    ]
+  },
+  "social_media": {
+    "linkedin": "",
+    "twitter": ""
+  },
+  "concurrenten": [],
+  "unique_selling_points": [
+    "Hands-on implementatie, niet alleen advies",
+    "Praktische AI toepassingen met directe ROI",
+    "Geen vendor lock-in"
+  ]
+}

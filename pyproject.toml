@@ -1,0 +1,29 @@
+[project]
+name = "ai-business-agent"
+version = "0.1.0"
+description = "Persoonlijke AI Business Automation Platform"
+requires-python = ">=3.10"
+dependencies = [
+    "claude-agent-sdk>=0.1.40",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
+    "sqlite-utils>=3.37",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.7.0",
+    "python-dotenv>=1.0.0",
+    "httpx>=0.28.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+]
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
