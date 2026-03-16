@@ -9,7 +9,7 @@ from src.memory.models import SCHEMA
 class MemoryStore:
     def __init__(self, db_path: str = "data/agent_memory.db"):
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(db_path)
+        self.db = sqlite3.connect(db_path, check_same_thread=False)
         self.db.row_factory = sqlite3.Row
         self.db.executescript(SCHEMA)
 

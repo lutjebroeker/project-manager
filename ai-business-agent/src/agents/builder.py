@@ -10,7 +10,7 @@ Zeg "koppel Home Assistant" en deze agent:
 
 import json
 
-from claude_agent_sdk import tool
+from src.agents.compat import tool
 
 from src.agents.base import BaseAgent
 from src.connectors.plugin_builder import PluginBuilder

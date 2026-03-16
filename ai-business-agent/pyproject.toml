@@ -4,7 +4,6 @@ version = "0.1.0"
 description = "Persoonlijke AI Business Automation Platform"
 requires-python = ">=3.10"
 dependencies = [
-    "claude-agent-sdk>=0.1.40",
     "fastapi>=0.115.0",
     "uvicorn>=0.34.0",
     "sqlite-utils>=3.37",
@@ -17,6 +16,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Provider-specifieke dependencies — installeer alleen wat je nodig hebt
+claude-sdk = ["claude-agent-sdk>=0.1.40"]
+anthropic = ["anthropic>=0.40.0"]
+openai = ["openai>=1.50.0"]
+# Ollama heeft alleen httpx nodig (al in core dependencies)
+all-providers = ["claude-agent-sdk>=0.1.40", "anthropic>=0.40.0", "openai>=1.50.0"]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
