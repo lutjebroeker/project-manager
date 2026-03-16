@@ -16,18 +16,20 @@ from claude_agent_sdk import (
 
 from src.config import load_business_context, settings
 from src.memory.store import MemoryStore
+from src.learning.knowledge_base import KnowledgeBase
 
 
 class BaseAgent:
     """Base class for all business automation agents.
 
     Learning loop:
-    1. Agent draait met system prompt + geleerde voorkeuren
+    1. Agent draait met system prompt + geleerde voorkeuren + globale kennis
     2. Output wordt gelogd (log_id teruggegeven)
     3. Gebruiker geeft feedback via API (rating + comment)
-    4. Bij voldoende feedback: agent analyseert patronen
-    5. Nieuwe voorkeuren worden opgeslagen en in prompt geïnjecteerd
-    6. Prompt versie wordt bijgehouden voor rollback
+    4. Bij voldoende feedback: learning wordt automatisch getriggerd
+    5. Nieuwe voorkeuren worden opgeslagen (agent-specifiek + globaal)
+    6. CLAUDE.md wordt gesynct zodat je hele Claude omgeving meegroeit
+    7. Prompt versie wordt bijgehouden voor rollback
     """
 
     name: str = "base"
@@ -39,6 +41,7 @@ class BaseAgent:
 
     def __init__(self, memory: MemoryStore | None = None, model: str | None = None):
         self.memory = memory or MemoryStore(settings.database_path)
+        self.kb = KnowledgeBase(self.memory)
         self.business_context = load_business_context()
         if model:
             self.model = model
@@ -61,19 +64,20 @@ class BaseAgent:
 
         ctx = json.dumps(self.business_context, ensure_ascii=False, indent=2)
 
-        # Haal geleerde voorkeuren op
-        preferences = self.memory.get_active_preferences(self.name)
+        # Haal geleerde voorkeuren op — agent-specifiek + globaal
+        all_preferences = self.kb.get_knowledge_for_agent(self.name)
         prefs_section = ""
-        if preferences:
+        if all_preferences:
             prefs_lines = []
-            for p in preferences:
+            for p in all_preferences:
                 confidence_label = (
                     "sterk" if p["confidence"] >= 0.8
                     else "gemiddeld" if p["confidence"] >= 0.5
                     else "zwak"
                 )
+                source = "globaal" if p["agent"] == "global" else self.name
                 prefs_lines.append(
-                    f"- [{p['category']}] {p['preference']} (vertrouwen: {confidence_label})"
+                    f"- [{p['category']}] {p['preference']} ({source}, {confidence_label})"
                 )
             prefs_section = (
                 "\n\n## Geleerde Voorkeuren\n"
@@ -154,6 +158,13 @@ class BaseAgent:
             input_data=prompt[:500],
             output_data=result_text[:1000],
         )
+
+        # Auto-learn check: als er genoeg nieuwe feedback is, leer automatisch
+        if self.kb.should_auto_learn(self.name):
+            try:
+                await self.learn_from_feedback()
+            except Exception:
+                pass  # Learning failure mag run niet blokkeren
 
         return result_text
 
@@ -286,8 +297,32 @@ Regels:
             )
             saved.append(f"[{category}] {preference} ({confidence})")
 
+        # Deel relevante voorkeuren ook globaal
+        global_categories = {"schrijfstijl", "tone_of_voice", "format", "werkwijze"}
+        for pref in new_prefs:
+            if not isinstance(pref, dict):
+                continue
+            category = pref.get("category", "")
+            preference = pref.get("preference", "")
+            confidence = pref.get("confidence", 0.5)
+            if category in global_categories and preference and confidence > 0.6:
+                self.kb.share_knowledge(
+                    source_agent=self.name,
+                    category=category,
+                    knowledge=preference,
+                    confidence=confidence,
+                )
+                saved.append(f"[GLOBAAL:{category}] {preference} ({confidence})")
+
+        # Sync naar CLAUDE.md zodat de hele Claude omgeving meegroeit
+        sync_result = self.kb.sync_to_claude_md()
+
         if saved:
-            summary = "Geleerde voorkeuren opgeslagen:\n" + "\n".join(f"- {s}" for s in saved)
+            summary = (
+                "Geleerde voorkeuren opgeslagen:\n"
+                + "\n".join(f"- {s}" for s in saved)
+                + f"\n\n{sync_result}"
+            )
         else:
             summary = "Geen nieuwe voorkeuren geëxtraheerd uit de feedback."
 

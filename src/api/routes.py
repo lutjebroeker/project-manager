@@ -3,18 +3,22 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from typing import Any
+
 from src.orchestrator import Orchestrator
 from src.agents.marketing import MarketingAgent
 from src.agents.sales import SalesAgent
 from src.agents.finance import FinanceAgent
 from src.agents.planning import PlanningAgent
 from src.memory.store import MemoryStore
+from src.learning.knowledge_base import KnowledgeBase
 from src.config import settings
 
 router = APIRouter()
 
 # Initialize orchestrator and agents
 memory = MemoryStore(settings.database_path)
+kb = KnowledgeBase(memory)
 orchestrator = Orchestrator()
 orchestrator.register(MarketingAgent(memory=memory))
 orchestrator.register(SalesAgent(memory=memory))
@@ -399,6 +403,93 @@ async def run_agent_tracked(agent_name: str, request: PromptRequest):
         raise HTTPException(status_code=404, detail=str(e))
 
 
+# --- Knowledge Base (centraal kennissysteem) ---
+
+
+class ClientKnowledgeRequest(BaseModel):
+    client_name: str
+    facts: dict[str, Any]
+
+
+class ShareKnowledgeRequest(BaseModel):
+    category: str
+    knowledge: str
+    confidence: float = 0.7
+
+
+@router.get("/knowledge/status")
+async def knowledge_status():
+    """Overzicht van het hele kennissysteem: alle agents, feedback, sync status."""
+    return kb.get_sync_status()
+
+
+@router.post("/knowledge/sync")
+async def sync_knowledge():
+    """Sync alle geleerde kennis naar CLAUDE.md."""
+    result = kb.sync_to_claude_md()
+    return {"result": result}
+
+
+@router.post("/knowledge/share")
+async def share_knowledge(request: ShareKnowledgeRequest):
+    """Deel kennis die voor alle agents geldt."""
+    pref_id = kb.share_knowledge(
+        source_agent="manual",
+        category=request.category,
+        knowledge=request.knowledge,
+        confidence=request.confidence,
+    )
+    # Direct syncen naar CLAUDE.md
+    kb.sync_to_claude_md()
+    return {"preference_id": pref_id, "message": "Kennis gedeeld en gesynct"}
+
+
+@router.get("/knowledge/global")
+async def get_global_knowledge(category: str | None = None):
+    """Haal globale kennis op, optioneel per categorie."""
+    prefs = kb.get_shared_knowledge(category)
+    return {"preferences": prefs}
+
+
+@router.post("/knowledge/client")
+async def remember_client(request: ClientKnowledgeRequest):
+    """Sla klantkennis op die alle agents kunnen gebruiken."""
+    kb.remember_client(request.client_name, request.facts)
+    return {"message": f"Klantkennis voor '{request.client_name}' opgeslagen"}
+
+
+@router.get("/knowledge/client/{client_name}")
+async def get_client_knowledge(client_name: str):
+    """Haal alle bekende info over een klant op."""
+    info = kb.recall_client(client_name)
+    if not info:
+        raise HTTPException(status_code=404, detail=f"Geen kennis over '{client_name}'")
+    return {"client": client_name, "knowledge": info}
+
+
+@router.get("/knowledge/clients")
+async def list_known_clients():
+    """Lijst van alle bekende klanten."""
+    clients = kb.list_clients()
+    return {"clients": clients}
+
+
+@router.post("/knowledge/learn-all")
+async def learn_all_agents():
+    """Trigger learning voor alle agents tegelijk. Synct daarna naar CLAUDE.md."""
+    results = {}
+    for agent_name in ["marketing", "sales", "finance", "planning"]:
+        try:
+            agent = orchestrator.get_agent(agent_name)
+            result = await agent.learn_from_feedback()
+            results[agent_name] = result
+        except Exception as e:
+            results[agent_name] = f"Error: {str(e)}"
+
+    sync_result = kb.sync_to_claude_md()
+    return {"learning_results": results, "sync": sync_result}
+
+
 # --- Status & logs ---
 
 
@@ -410,7 +501,9 @@ async def get_agent_logs(agent_name: str, limit: int = 20):
 
 @router.get("/status")
 async def health():
+    status = kb.get_sync_status()
     return {
         "status": "ok",
         "agents": orchestrator.list_agents(),
+        "knowledge": status,
     }
