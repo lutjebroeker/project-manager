@@ -1,0 +1,96 @@
+{
+  "_info": "Voorbeeld n8n configuraties — kopieer deze naar je n8n HTTP Request nodes",
+  "examples": [
+    {
+      "name": "LinkedIn Post Genereren",
+      "description": "Genereert wekelijks een LinkedIn post via n8n Schedule trigger",
+      "n8n_http_request": {
+        "method": "POST",
+        "url": "http://localhost:8000/webhook/marketing/linkedin-post",
+        "body": {
+          "topic": "AI agents voor het MKB"
+        }
+      }
+    },
+    {
+      "name": "Offerte Maken",
+      "description": "Genereer een offerte wanneer een lead binnenkomt via formulier",
+      "n8n_http_request": {
+        "method": "POST",
+        "url": "http://localhost:8000/webhook/sales/quote",
+        "body": {
+          "client_name": "Acme B.V.",
+          "client_need": "AI chatbot voor klantenservice, 500+ tickets per dag",
+          "service_type": "AI Implementatie"
+        }
+      }
+    },
+    {
+      "name": "Follow-up Email na Meeting",
+      "description": "Stuur automatisch een follow-up draft na een calendar event",
+      "n8n_http_request": {
+        "method": "POST",
+        "url": "http://localhost:8000/webhook/sales/follow-up",
+        "body": {
+          "client_name": "Jan de Vries",
+          "context": "Besproken: hun huidige klantenservice proces, 50 medewerkers, zoeken naar AI oplossing voor ticket categorisatie",
+          "follow_up_type": "after_meeting"
+        }
+      }
+    },
+    {
+      "name": "Uren Loggen",
+      "description": "Log uren vanuit Toggl/Clockify webhook",
+      "n8n_http_request": {
+        "method": "POST",
+        "url": "http://localhost:8000/webhook/finance/log-hours",
+        "body": {
+          "client": "Acme B.V.",
+          "hours": 4.5,
+          "description": "AI strategy workshop voorbereiding",
+          "project": "AI Chatbot"
+        }
+      }
+    },
+    {
+      "name": "Factuur Genereren",
+      "description": "Maak een factuur op basis van gelogde uren",
+      "n8n_http_request": {
+        "method": "POST",
+        "url": "http://localhost:8000/webhook/finance/invoice",
+        "body": {
+          "client_name": "Acme B.V.",
+          "description": "AI Strategy Advies - maart 2026",
+          "hours": 16,
+          "service_type": "AI Strategie Advies"
+        }
+      }
+    },
+    {
+      "name": "Dagplanning Maken",
+      "description": "Elke ochtend om 08:00 een dagplanning ontvangen",
+      "n8n_http_request": {
+        "method": "POST",
+        "url": "http://localhost:8000/webhook/planning/day-plan",
+        "body": {
+          "focus": "Afmaken offerte Acme, voorbereiden workshop volgende week"
+        }
+      }
+    },
+    {
+      "name": "Universeel Webhook (vrije prompt)",
+      "description": "Stuur elke vraag naar een agent via het universele endpoint",
+      "n8n_http_request": {
+        "method": "POST",
+        "url": "http://localhost:8000/webhook/run",
+        "body": {
+          "agent": "sales",
+          "action": "run",
+          "data": {
+            "prompt": "Analyseer deze lead: TechCorp, 200 medewerkers, zoekt AI voor HR processen. Budget onbekend."
+          }
+        }
+      }
+    }
+  ]
+}
