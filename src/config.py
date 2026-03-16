@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     database_path: str = "data/agent_memory.db"
     business_context_path: str = "data/business_context.json"
     obsidian_vault_path: str = ""
+    api_token: str = ""  # Auto-gegenereerd als leeg
     # Claude Agent SDK gebruikt Claude Code CLI auth (Max abonnement)
     # Geen API key nodig — zorg dat `claude login` is gedaan
 
