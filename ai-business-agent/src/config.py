@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     port: int = 8000
     database_path: str = "data/agent_memory.db"
     business_context_path: str = "data/business_context.json"
+    obsidian_vault_path: str = ""
     # Claude Agent SDK gebruikt Claude Code CLI auth (Max abonnement)
     # Geen API key nodig — zorg dat `claude login` is gedaan
 

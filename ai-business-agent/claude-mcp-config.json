@@ -1,0 +1,21 @@
+{
+  "_readme": [
+    "Kopieer het 'mcpServers' blok naar je Claude configuratie:",
+    "",
+    "Claude Desktop: ~/Library/Application Support/Claude/claude_desktop_config.json (Mac)",
+    "                %APPDATA%/Claude/claude_desktop_config.json (Windows)",
+    "Claude Code:    ~/.claude/settings.json onder 'mcpServers'",
+    "",
+    "Pas de paden aan naar jouw situatie!"
+  ],
+  "mcpServers": {
+    "ai-business-agent": {
+      "command": "python",
+      "args": [
+        "/PAD/NAAR/ai-business-agent/mcp_server.py",
+        "--vault", "/PAD/NAAR/JE/ObsidianVault",
+        "--db", "/PAD/NAAR/ai-business-agent/data/agent_memory.db"
+      ]
+    }
+  }
+}
