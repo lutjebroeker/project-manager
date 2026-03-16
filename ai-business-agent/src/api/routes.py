@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 from src.orchestrator import Orchestrator
 from src.agents.marketing import MarketingAgent
+from src.agents.sales import SalesAgent
 from src.memory.store import MemoryStore
 from src.config import settings
 
@@ -14,6 +15,7 @@ router = APIRouter()
 memory = MemoryStore(settings.database_path)
 orchestrator = Orchestrator()
 orchestrator.register(MarketingAgent(memory=memory))
+orchestrator.register(SalesAgent(memory=memory))
 
 
 class PromptRequest(BaseModel):
@@ -70,6 +72,74 @@ async def generate_content_plan(request: ContentPlanRequest):
     agent = orchestrator.get_agent("marketing")
     result = await agent.generate_content_plan(request.weeks)
     return {"result": result}
+
+
+# --- Sales shortcuts ---
+
+
+class QuoteRequest(BaseModel):
+    client_name: str
+    client_need: str
+    service_type: str | None = None
+
+
+class FollowUpRequest(BaseModel):
+    client_name: str
+    context: str
+    follow_up_type: str = "after_meeting"
+
+
+class ColdEmailRequest(BaseModel):
+    client_name: str
+    company: str
+    context: str
+
+
+class LeadQualifyRequest(BaseModel):
+    company: str
+    info: str
+
+
+@router.post("/agent/sales/quote")
+async def generate_quote(request: QuoteRequest):
+    agent = orchestrator.get_agent("sales")
+    result = await agent.generate_quote(
+        request.client_name, request.client_need, request.service_type
+    )
+    return {"result": result}
+
+
+@router.post("/agent/sales/follow-up")
+async def generate_follow_up(request: FollowUpRequest):
+    agent = orchestrator.get_agent("sales")
+    result = await agent.generate_follow_up(
+        request.client_name, request.context, request.follow_up_type
+    )
+    return {"result": result}
+
+
+@router.post("/agent/sales/cold-email")
+async def generate_cold_email(request: ColdEmailRequest):
+    agent = orchestrator.get_agent("sales")
+    result = await agent.generate_cold_email(
+        request.client_name, request.company, request.context
+    )
+    return {"result": result}
+
+
+@router.post("/agent/sales/qualify-lead")
+async def qualify_lead(request: LeadQualifyRequest):
+    agent = orchestrator.get_agent("sales")
+    result = await agent.qualify_lead(request.company, request.info)
+    return {"result": result}
+
+
+@router.get("/agent/sales/leads")
+async def get_leads():
+    import json
+    existing = memory.recall("sales", "leads")
+    leads = json.loads(existing) if existing else []
+    return {"leads": leads}
 
 
 # --- Status & logs ---
