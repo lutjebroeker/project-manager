@@ -10,8 +10,10 @@ from src.agents.marketing import MarketingAgent
 from src.agents.sales import SalesAgent
 from src.agents.finance import FinanceAgent
 from src.agents.planning import PlanningAgent
+from src.agents.builder import BuilderAgent
 from src.memory.store import MemoryStore
 from src.learning.knowledge_base import KnowledgeBase
+from src.connectors.plugin_builder import PluginBuilder
 from src.config import settings
 
 router = APIRouter()
@@ -19,11 +21,13 @@ router = APIRouter()
 # Initialize orchestrator and agents
 memory = MemoryStore(settings.database_path)
 kb = KnowledgeBase(memory)
+plugin_builder = PluginBuilder(memory)
 orchestrator = Orchestrator()
 orchestrator.register(MarketingAgent(memory=memory))
 orchestrator.register(SalesAgent(memory=memory))
 orchestrator.register(FinanceAgent(memory=memory))
 orchestrator.register(PlanningAgent(memory=memory))
+orchestrator.register(BuilderAgent(memory=memory))
 
 
 class PromptRequest(BaseModel):
@@ -490,6 +494,124 @@ async def learn_all_agents():
     return {"learning_results": results, "sync": sync_result}
 
 
+# --- Obsidian ---
+
+
+@router.post("/obsidian/index")
+async def index_obsidian():
+    """Indexeer de Obsidian vault en importeer projecten/klanten."""
+    from src.connectors.obsidian import ObsidianConnector
+    if not settings.obsidian_vault_path:
+        raise HTTPException(status_code=400, detail="OBSIDIAN_VAULT_PATH niet geconfigureerd in .env")
+    connector = ObsidianConnector(settings.obsidian_vault_path, memory)
+    result = connector.index_all()
+    kb.sync_to_claude_md()
+    return result
+
+
+@router.get("/obsidian/search")
+async def search_obsidian(query: str, max_results: int = 10):
+    """Zoek in de Obsidian vault."""
+    from src.connectors.obsidian import ObsidianConnector
+    if not settings.obsidian_vault_path:
+        raise HTTPException(status_code=400, detail="OBSIDIAN_VAULT_PATH niet geconfigureerd")
+    connector = ObsidianConnector(settings.obsidian_vault_path, memory)
+    return {"results": connector.search_vault(query, max_results)}
+
+
+@router.get("/obsidian/note")
+async def read_obsidian_note(path: str):
+    """Lees een Obsidian notitie."""
+    from src.connectors.obsidian import ObsidianConnector
+    if not settings.obsidian_vault_path:
+        raise HTTPException(status_code=400, detail="OBSIDIAN_VAULT_PATH niet geconfigureerd")
+    connector = ObsidianConnector(settings.obsidian_vault_path, memory)
+    return connector.read_note(path)
+
+
+@router.post("/obsidian/extract-working-style")
+async def extract_working_style():
+    """Analyseer de vault en extraheer werkwijze/denkpatronen."""
+    from src.connectors.obsidian import ObsidianConnector
+    if not settings.obsidian_vault_path:
+        raise HTTPException(status_code=400, detail="OBSIDIAN_VAULT_PATH niet geconfigureerd")
+    connector = ObsidianConnector(settings.obsidian_vault_path, memory)
+    patterns = connector.extract_working_style()
+    return {"patterns_found": len(patterns), "patterns": patterns}
+
+
+# --- Plugins (zelf-uitbreidend systeem) ---
+
+
+class BuildPluginRequest(BaseModel):
+    request: str  # Natuurlijke taal: "Koppel Home Assistant op http://..."
+
+
+class ExtendPluginRequest(BaseModel):
+    request: str
+
+
+class PluginConfigRequest(BaseModel):
+    config: dict[str, Any]
+
+
+@router.post("/plugins/build")
+async def build_plugin(request: BuildPluginRequest):
+    """Bouw een nieuwe plugin via natuurlijke taal.
+
+    Voorbeeld: {"request": "Koppel Home Assistant op http://192.168.1.100:8123 met token xyz"}
+    """
+    builder = orchestrator.get_agent("builder")
+    result = await builder.build_plugin(request.request)
+    return {"result": result}
+
+
+@router.post("/plugins/{name}/extend")
+async def extend_plugin(name: str, request: ExtendPluginRequest):
+    """Breid een bestaande plugin uit met nieuwe functionaliteit."""
+    builder = orchestrator.get_agent("builder")
+    result = await builder.extend_plugin(name, request.request)
+    return {"result": result}
+
+
+@router.get("/plugins")
+async def list_plugins():
+    """Lijst van alle plugins."""
+    return {"plugins": plugin_builder.list_plugins()}
+
+
+@router.post("/plugins/{name}/activate")
+async def activate_plugin(name: str):
+    """Activeer een plugin."""
+    success = plugin_builder.activate_plugin(name)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Plugin '{name}' niet gevonden")
+    return {"message": f"Plugin '{name}' geactiveerd"}
+
+
+@router.post("/plugins/{name}/disable")
+async def disable_plugin(name: str):
+    """Deactiveer een plugin."""
+    success = plugin_builder.disable_plugin(name)
+    if not success:
+        raise HTTPException(status_code=404, detail=f"Plugin '{name}' niet gevonden")
+    return {"message": f"Plugin '{name}' uitgeschakeld"}
+
+
+@router.put("/plugins/{name}/config")
+async def update_plugin_config(name: str, request: PluginConfigRequest):
+    """Update de configuratie van een plugin (URL, tokens, etc.)."""
+    plugin = plugin_builder.get_plugin(name)
+    if not plugin:
+        raise HTTPException(status_code=404, detail=f"Plugin '{name}' niet gevonden")
+    plugin["config"].update(request.config)
+    plugin_dir = plugin_builder.plugins_dir / name
+    (plugin_dir / "manifest.json").write_text(
+        json.dumps(plugin, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+    return {"message": f"Config voor '{name}' bijgewerkt", "config": plugin["config"]}
+
+
 # --- Status & logs ---
 
 
@@ -505,5 +627,6 @@ async def health():
     return {
         "status": "ok",
         "agents": orchestrator.list_agents(),
+        "plugins": plugin_builder.list_plugins(),
         "knowledge": status,
     }

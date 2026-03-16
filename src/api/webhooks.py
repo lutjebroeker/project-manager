@@ -18,6 +18,7 @@ from src.agents.marketing import MarketingAgent
 from src.agents.sales import SalesAgent
 from src.agents.finance import FinanceAgent
 from src.agents.planning import PlanningAgent
+from src.agents.builder import BuilderAgent
 from src.memory.store import MemoryStore
 from src.config import settings
 
@@ -30,6 +31,7 @@ orchestrator.register(MarketingAgent(memory=memory))
 orchestrator.register(SalesAgent(memory=memory))
 orchestrator.register(FinanceAgent(memory=memory))
 orchestrator.register(PlanningAgent(memory=memory))
+orchestrator.register(BuilderAgent(memory=memory))
 
 
 class WebhookPayload(BaseModel):
@@ -204,6 +206,16 @@ async def _route_action(agent_name: str, action: str, data: dict) -> str:
             "day-plan": lambda: agent.create_day_plan(data.get("focus")),
             "add-tasks": lambda: agent.add_tasks(data.get("tasks", "")),
             "prioritize": lambda: agent.prioritize(),
+            "run": lambda: agent.run(data.get("prompt", "")),
+        }
+
+    # Builder actions
+    elif agent_name == "builder":
+        actions = {
+            "build": lambda: agent.build_plugin(data.get("request", "")),
+            "extend": lambda: agent.extend_plugin(
+                data.get("plugin_name", ""), data.get("request", "")
+            ),
             "run": lambda: agent.run(data.get("prompt", "")),
         }
 
