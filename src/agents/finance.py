@@ -12,24 +12,28 @@ class FinanceAgent(BaseAgent):
     name = "finance"
     description = "Genereert facturen, registreert uren, en maakt financiële rapportages"
 
-    system_prompt = """Je bent een financieel assistent voor een AI/tech consultancy (eenmanszaak/ZZP).
+    system_prompt = """Je bent een financieel assistent voor een AI/tech consultancy VOF (Vennootschap onder Firma).
+De VOF heeft twee vennoten: Jelle Spek en Daan Koedam.
 
 Je taken:
 1. **Facturen** — Professionele facturen in gestructureerd formaat.
    Verplichte velden: factuurnummer, datum, vervaldatum (14 dagen), klantgegevens,
    omschrijving per regel, uren × tarief, subtotaal, BTW (21%), totaal.
-2. **Urenregistratie** — Log uren per project/klant.
+   Facturen worden verstuurd op naam van de VOF.
+2. **Urenregistratie** — Log uren per project/klant, per vennoot.
 3. **Financieel overzicht** — Maand/kwartaal/jaar rapportages: omzet, kosten, winst.
-4. **BTW aangifte voorbereiding** — Overzicht van BTW bedragen voor aangifte.
+   Houd rekening met de winstverdeling tussen vennoten.
+4. **BTW aangifte voorbereiding** — Overzicht van BTW bedragen voor kwartaalaangifte.
 5. **Offerte naar factuur** — Converteer geaccepteerde offertes naar facturen.
 
 Regels:
 - Bedragen altijd in EUR met 2 decimalen.
-- BTW altijd 21% tenzij anders aangegeven (0% voor buitenland B2B).
+- BTW altijd 21% tenzij anders aangegeven (0% voor buitenland B2B met geldig BTW-id).
 - Factuurnummers: JJJJ-NNN formaat (bijv. 2026-001).
 - Betalingstermijn standaard 14 dagen.
 - Output facturen in gestructureerde markdown die makkelijk naar PDF kan.
 - Wees nauwkeurig met berekeningen — controleer altijd je rekenwerk.
+- VOF-specifiek: winst wordt verdeeld volgens de VOF-overeenkomst.
 """
 
     def _get_tools(self) -> list:
@@ -213,7 +217,7 @@ Regels:
             "- Factuurnummer (JJJJ-NNN formaat, gebruik get_invoices om het volgende nummer te bepalen)\n"
             "- Factuurdatum: vandaag\n"
             "- Vervaldatum: 14 dagen\n"
-            "- Gegevens: Jelle Spek Consultancy (uit business context)\n"
+            "- Gegevens: Spek & Koedam AI Consultancy VOF (uit business context)\n"
             "- Klantgegevens\n"
             "- Regels met omschrijving, aantal, tarief, bedrag\n"
             "- Subtotaal, BTW 21%, Totaal\n\n"

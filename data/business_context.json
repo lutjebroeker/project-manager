@@ -1,11 +1,26 @@
 {
   "bedrijf": {
-    "naam": "Jelle Spek Consultancy",
+    "naam": "Spek & Koedam AI Consultancy",
+    "rechtsvorm": "VOF (Vennootschap onder Firma)",
     "type": "Consultancy / Advies",
     "beschrijving": "AI en technologie advies voor bedrijven",
     "website": "https://jellespek.nl",
-    "taal": "nl"
+    "taal": "nl",
+    "kvk_nummer": "",
+    "btw_id": ""
   },
+  "vennoten": [
+    {
+      "naam": "Jelle Spek",
+      "rol": "Vennoot",
+      "email": ""
+    },
+    {
+      "naam": "Daan Koedam",
+      "rol": "Vennoot",
+      "email": ""
+    }
+  ],
   "diensten": [
     {
       "naam": "AI Strategie Advies",

@@ -21,7 +21,12 @@ app = FastAPI(
 # CORS — nodig voor dashboard
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Beperk dit in productie
+    allow_origins=[
+        "https://jellespek.nl",
+        "https://www.jellespek.nl",
+        f"http://localhost:{settings.port}",
+        f"http://127.0.0.1:{settings.port}",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
