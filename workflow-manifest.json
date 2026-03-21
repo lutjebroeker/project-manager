@@ -60,6 +60,15 @@
       "webhook": "/webhook/add-task?project=X&task=Y",
       "updatedAt": "2026-03-15T11:16:13.221Z",
       "notes": "Voegt een - [ ] taak toe aan ## Backlog in de Obsidian project note. Toggle uit/aan om webhook te registreren."
+    },
+    {
+      "id": "R8kLmNwPqT",
+      "name": "Update Obsidian Log",
+      "file": "workflows/R8kLmNwPqT__update-obsidian-log.json",
+      "active": false,
+      "webhook": "/webhook/update-obsidian-log?project=X&status=Y",
+      "updatedAt": "2026-03-21T00:00:00.000Z",
+      "notes": "Voegt een timestamped status entry toe aan ## Log in de Obsidian project note. SSH credential: selecteer 'SSH Obsidian/OpenCode/Fabric' in n8n UI. Toggle uit/aan om webhook te registreren."
     }
   ]
 }

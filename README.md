@@ -25,7 +25,8 @@ project-manager/
 │   ├── GfmBMQOHUdegYA1o__stop-project-session.json
 │   └── YnOWKjbAUdJM7R9O__new-project-session.json
 └── obsidian/
-    └── Project Template.md     # Template voor Obsidian project notes
+    ├── Project Template.md     # Template voor Obsidian project notes
+    └── CLAUDE.md               # CLAUDE.md template met auto-logging instructies
 ```
 
 ## n8n Workflows
@@ -35,6 +36,7 @@ project-manager/
 | Start Project Session | `/webhook/start-project?session=X&folder=Y` | Start/herstart tmux + Remote Control, redirect naar claude.ai |
 | Stop Project Session | `/webhook/stop-project?session=X` | Kill tmux sessie + opruimen temp files |
 | New Project Session | `/webhook/new-project?name=X` | GitHub repo aanmaken, clonen, sessie starten |
+| Update Obsidian Log | `/webhook/update-obsidian-log?project=X&status=Y` | Timestamped status entry toevoegen aan ## Log in Obsidian note |
 
 ### Parameters Start Session
 

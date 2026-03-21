@@ -1,0 +1,57 @@
+{
+  "id": "R8kLmNwPqT",
+  "name": "Update Obsidian Log",
+  "description": "Voegt een timestamped status entry toe aan ## Log in de Obsidian project note.",
+  "active": false,
+  "isArchived": false,
+  "createdAt": "2026-03-21T00:00:00.000Z",
+  "updatedAt": "2026-03-21T00:00:00.000Z",
+  "tags": [],
+  "nodes": [
+    {
+      "id": "wh-log", "name": "Webhook", "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1, "position": [-400, 0],
+      "parameters": {"path": "update-obsidian-log", "responseMode": "responseNode", "options": {}}
+    },
+    {
+      "id": "ssh-read-log", "name": "Lees project note", "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1, "position": [-200, 0],
+      "parameters": {"command": "=cat \"/home/obsidian/Documents/PersonalAssistant/11. Projects/02. Active/{{ $json.query.project }}.md\" 2>/dev/null || echo 'FILE_NOT_FOUND'"},
+      "credentials": {"sshPassword": {"id": "OBSIDIAN_SSH_PLACEHOLDER", "name": "SSH Obsidian/OpenCode/Fabric"}}
+    },
+    {
+      "id": "code-append-log", "name": "Voeg log entry toe", "type": "n8n-nodes-base.code",
+      "typeVersion": 2, "position": [0, 0],
+      "parameters": {"jsCode": "const fileContent = $input.first().json.stdout || '';\nconst project = $('Webhook').first().json.query.project;\nconst status = $('Webhook').first().json.query.status || '';\nconst section = $('Webhook').first().json.query.section || 'Log';\n\nif (fileContent.trim() === 'FILE_NOT_FOUND') {\n  return [{ json: { hasError: true, errorType: 'file_not_found', project } }];\n}\n\nif (!status.trim()) {\n  return [{ json: { hasError: true, errorType: 'empty_status', project } }];\n}\n\n// Format timestamp as YYYY-MM-DD HH:mm\nconst now = new Date();\nconst ts = now.toISOString().slice(0, 16).replace('T', ' ');\nconst entry = `- ${ts} — ${status.trim()}`;\n\nlet updated = fileContent;\n\n// Find the target section (## Log by default) and append entry\nconst sectionRegex = new RegExp(`(## ${section}[\\\\r\\\\n]([\\\\s\\\\S]*?))(?=[\\\\n]## |[\\\\n]---|$)`, 'm');\nconst sectionMatch = updated.match(sectionRegex);\n\nif (sectionMatch) {\n  const sectionContent = sectionMatch[1];\n  const insertPos = updated.indexOf(sectionContent) + sectionContent.length;\n  // Trim trailing whitespace from section, add entry, then rest\n  const before = updated.slice(0, insertPos).trimEnd();\n  const after = updated.slice(insertPos);\n  updated = before + '\\n' + entry + after;\n} else {\n  // No matching section — append ## Log at the end\n  updated = updated.trimEnd() + '\\n\\n## Log\\n' + entry + '\\n';\n}\n\nconst base64Content = Buffer.from(updated).toString('base64');\nreturn [{ json: { hasError: false, base64Content, project, status: status.trim(), timestamp: ts } }];"}
+    },
+    {
+      "id": "if-ok-log", "name": "Gelukt?", "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2, "position": [200, 0],
+      "parameters": {"conditions": {"options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2}, "conditions": [{"id": "check-error", "leftValue": "={{ $json.hasError }}", "rightValue": true, "operator": {"type": "boolean", "operation": "notEquals"}}], "combinator": "and"}}
+    },
+    {
+      "id": "ssh-write-log", "name": "Schrijf note terug", "type": "n8n-nodes-base.ssh",
+      "typeVersion": 1, "position": [400, -100],
+      "parameters": {"command": "=echo \"{{ $json.base64Content }}\" | base64 -d > \"/home/obsidian/Documents/PersonalAssistant/11. Projects/02. Active/{{ $json.project }}.md\""},
+      "credentials": {"sshPassword": {"id": "OBSIDIAN_SSH_PLACEHOLDER", "name": "SSH Obsidian/OpenCode/Fabric"}}
+    },
+    {
+      "id": "resp-ok-log", "name": "Log bijgewerkt", "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5, "position": [600, -100],
+      "parameters": {"respondWith": "json", "responseBody": "={{ JSON.stringify({ ok: true, project: $('Voeg log entry toe').first().json.project, status: $('Voeg log entry toe').first().json.status, timestamp: $('Voeg log entry toe').first().json.timestamp }) }}", "options": {}}
+    },
+    {
+      "id": "resp-err-log", "name": "Fout", "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5, "position": [400, 120],
+      "parameters": {"respondWith": "json", "responseBody": "={{ JSON.stringify({ ok: false, error: $json.errorType }) }}", "options": {"responseCode": 400}}
+    }
+  ],
+  "connections": {
+    "Webhook": {"main": [[{"node": "Lees project note", "type": "main", "index": 0}]]},
+    "Lees project note": {"main": [[{"node": "Voeg log entry toe", "type": "main", "index": 0}]]},
+    "Voeg log entry toe": {"main": [[{"node": "Gelukt?", "type": "main", "index": 0}]]},
+    "Gelukt?": {"main": [[{"node": "Schrijf note terug", "type": "main", "index": 0}], [{"node": "Fout", "type": "main", "index": 0}]]},
+    "Schrijf note terug": {"main": [[{"node": "Log bijgewerkt", "type": "main", "index": 0}]]}
+  },
+  "settings": {"executionOrder": "v1"}
+}
